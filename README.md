@@ -34,10 +34,7 @@ button {
   background:#3b82f6;
   color:white;
   cursor:pointer;
-  transition:0.2s;
 }
-
-button:hover { opacity:0.8; }
 
 header {
   background:linear-gradient(90deg,#1e3a8a,#2563eb);
@@ -59,7 +56,6 @@ header {
   padding:15px;
   border-radius:12px;
   text-align:center;
-  box-shadow:0 0 10px rgba(0,0,0,0.3);
 }
 
 .card {
@@ -67,12 +63,21 @@ header {
   padding:15px;
   margin-top:10px;
   border-radius:12px;
-  box-shadow:0 0 10px rgba(0,0,0,0.3);
 }
 
 .ativo { border-left:5px solid #22c55e; }
 .vencido { border-left:5px solid #ef4444; }
 .aviso { border-left:5px solid #f59e0b; }
+
+canvas {
+  background:#1e293b;
+  border-radius:15px;
+  padding:15px;
+  margin:20px auto;
+  display:block;
+  max-width:350px;
+  max-height:350px;
+}
 
 @keyframes piscar {
   0% { background:#ef4444; }
@@ -80,15 +85,7 @@ header {
   100% { background:#ef4444; }
 }
 
-canvas {
-  background:#1e293b;
-  border-radius:15px;
-  padding:15px;
-  margin-top:15px;
-}
-
 .delete { background:#ef4444; }
-.cobrar { background:#22c55e; }
 </style>
 </head>
 
@@ -111,7 +108,7 @@ Painel IPTV PRO MAX
 <div class="container">
 
 <div id="alerta" style="display:none; padding:15px; border-radius:10px; text-align:center; margin-bottom:10px; font-weight:bold; animation: piscar 1s infinite;">
-🚨 EXISTEM CLIENTES VENCIDOS! COBRE AGORA!
+🚨 EXISTEM CLIENTES VENCIDOS!
 </div>
 
 <div class="cards">
@@ -125,10 +122,6 @@ Painel IPTV PRO MAX
 </div>
 
 <canvas id="grafico"></canvas>
-
-<br>
-
-<button onclick="cobrarAtrasados()">💸 Cobrar Atrasados</button>
 
 <h3>Cadastro</h3>
 
@@ -163,6 +156,9 @@ let editandoId=null;
 let chart;
 let tocou=false;
 
+let modoGrafico="clientes";
+let intervaloGrafico;
+
 // LOGIN
 function entrar(){
   if(user.value===USUARIO && pass.value===SENHA){
@@ -195,13 +191,44 @@ function statusCalc(v){
   return "ativo";
 }
 
+// PLUGIN CENTRO
+const centerTextPlugin={
+  id:'centerText',
+  beforeDraw(chart){
+    const {width,height}=chart;
+    const ctx=chart.ctx;
+
+    let total=chart.config.data.datasets[0].data.reduce((a,b)=>a+b,0);
+
+    ctx.save();
+    ctx.font="bold 20px Arial";
+    ctx.fillStyle="#fff";
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+
+    if(modoGrafico==="clientes"){
+      ctx.fillText(total,width/2,height/2-5);
+      ctx.font="12px Arial";
+      ctx.fillStyle="#9ca3af";
+      ctx.fillText("Clientes",width/2,height/2+15);
+    } else {
+      ctx.fillText("R$ "+total.toFixed(0),width/2,height/2-5);
+      ctx.font="12px Arial";
+      ctx.fillStyle="#9ca3af";
+      ctx.fillText("Faturamento",width/2,height/2+15);
+    }
+
+    ctx.restore();
+  }
+};
+
 // CARREGAR
 async function carregar(){
   const { data } = await client.from("Painel ftv").select("*");
   dadosClientes = data || [];
 
   let t=0,a=0,v=0,av=0,r=0,rec=0,atr=0;
-  let planos={};
+  let planosClientes={}, planosValor={};
   let html="";
 
   dadosClientes.forEach(c=>{
@@ -216,7 +243,8 @@ async function carregar(){
     if(status!=="vencido") rec+=Number(c.valor||0);
     if(status==="vencido") atr+=Number(c.valor||0);
 
-    planos[c.plano]=(planos[c.plano]||0)+1;
+    planosClientes[c.plano]=(planosClientes[c.plano]||0)+1;
+    planosValor[c.plano]=(planosValor[c.plano]||0)+Number(c.valor||0);
 
     html+=`
     <div class="card ${status}">
@@ -224,9 +252,9 @@ async function carregar(){
       <p>${c.plano} - R$ ${c.valor}</p>
       <p>Vence: ${c.vencimento}</p>
 
-      <button onclick="editar(${c.id})">✏️ Editar</button>
-      <button onclick="pago(${c.id})">✅ Pago</button>
-      <button class="delete" onclick="del(${c.id})">Excluir</button>
+      <button onclick="editar(${c.id})">✏️</button>
+      <button onclick="pago(${c.id})">✅</button>
+      <button class="delete" onclick="del(${c.id})">🗑️</button>
     </div>`;
   });
 
@@ -240,8 +268,7 @@ async function carregar(){
 
   lista.innerHTML=html;
 
-  // ALERTA
-  let temAtraso = dadosClientes.some(c => statusCalc(c.vencimento)==="vencido");
+  let temAtraso=dadosClientes.some(c=>statusCalc(c.vencimento)==="vencido");
 
   if(temAtraso){
     alerta.style.display="block";
@@ -254,60 +281,75 @@ async function carregar(){
     tocou=false;
   }
 
-  // GRÁFICO PROFISSIONAL
+  atualizarGrafico(planosClientes, planosValor);
+  iniciarTrocaGrafico(planosClientes, planosValor);
+}
+
+// GRAFICO
+function atualizarGrafico(planosClientes, planosValor){
+  let labels, dados;
+
+  if(modoGrafico==="clientes"){
+    labels=Object.keys(planosClientes);
+    dados=Object.values(planosClientes);
+  } else {
+    labels=Object.keys(planosValor);
+    dados=Object.values(planosValor);
+  }
+
   if(chart) chart.destroy();
 
-  chart = new Chart(document.getElementById("grafico"), {
-    type: "doughnut",
-    data: {
-      labels: Object.keys(planos),
-      datasets: [{
-        data: Object.values(planos),
-        backgroundColor: [
-          "#3b82f6",
-          "#22c55e",
-          "#f59e0b",
-          "#ef4444",
-          "#a855f7",
-          "#06b6d4"
+  chart=new Chart(document.getElementById("grafico"),{
+    type:"doughnut",
+    data:{
+      labels:labels,
+      datasets:[{
+        data:dados,
+        backgroundColor:[
+          "#3b82f6","#22c55e","#f59e0b","#ef4444","#a855f7","#06b6d4"
         ],
-        borderWidth: 0
+        borderWidth:0
       }]
     },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: { color:"#fff", font:{ size:13 } }
+    options:{
+      plugins:{
+        legend:{
+          position:"bottom",
+          labels:{color:"#fff"}
         }
       },
-      cutout: "70%",
-      animation: { animateScale:true }
-    }
+      cutout:"75%"
+    },
+    plugins:[centerTextPlugin]
   });
 }
 
-// SALVAR / EDITAR
-async function salvar(){
+// TROCA AUTOMÁTICA
+function iniciarTrocaGrafico(planosClientes, planosValor){
+  clearInterval(intervaloGrafico);
 
-  if(editandoId !== null){
-    await client.from("Painel ftv")
-    .update({
+  intervaloGrafico=setInterval(()=>{
+    modoGrafico = modoGrafico==="clientes" ? "valor" : "clientes";
+    atualizarGrafico(planosClientes, planosValor);
+  },4000);
+}
+
+// SALVAR
+async function salvar(){
+  if(editandoId!==null){
+    await client.from("Painel ftv").update({
       nome:nome.value,
       whatsapp:whatsapp.value,
       plano:plano.value,
       valor:parseFloat(valor.value)||0,
       data_de_inicio:inicio.value,
       vencimento:vencimento.value
-    })
-    .eq("id", editandoId);
+    }).eq("id",editandoId);
 
     editandoId=null;
-
   } else {
     await client.from("Painel ftv").insert([{
-      id: Date.now(),
+      id:Date.now(),
       nome:nome.value,
       whatsapp:whatsapp.value,
       plano:plano.value,
@@ -323,7 +365,7 @@ async function salvar(){
 
 // EDITAR
 function editar(id){
-  let c = dadosClientes.find(x => Number(x.id)===Number(id));
+  let c=dadosClientes.find(x=>Number(x.id)===Number(id));
   if(!c) return;
 
   nome.value=c.nome||"";
@@ -334,45 +376,22 @@ function editar(id){
   vencimento.value=c.vencimento||"";
 
   editandoId=id;
-  window.scrollTo({top:0, behavior:"smooth"});
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
 // PAGO
 async function pago(id){
-  let c = dadosClientes.find(x => Number(x.id)===Number(id));
+  let c=dadosClientes.find(x=>Number(x.id)===Number(id));
   if(!c) return;
 
-  let novaData = new Date(c.vencimento);
-  novaData.setDate(novaData.getDate()+30);
+  let nova=new Date(c.vencimento);
+  nova.setDate(nova.getDate()+30);
 
-  let formatada = novaData.toISOString().split("T")[0];
+  let formatada=nova.toISOString().split("T")[0];
 
-  await client.from("Painel ftv")
-  .update({ vencimento: formatada })
-  .eq("id", id);
+  await client.from("Painel ftv").update({vencimento:formatada}).eq("id",id);
 
   carregar();
-}
-
-// COBRAR ATRASADOS
-function cobrarAtrasados(){
-  let lista = dadosClientes.filter(c=>statusCalc(c.vencimento)==="vencido");
-  let i=0;
-
-  function enviar(){
-    if(i>=lista.length) return;
-
-    let c=lista[i];
-    let num=c.whatsapp.replace(/\D/g,'');
-    let msg=`🚨 ${c.nome}, seu plano está vencido (${c.vencimento}).`;
-
-    window.open(`https://wa.me/55${num}?text=${encodeURIComponent(msg)}`);
-
-    i++;
-    setTimeout(enviar,1500);
-  }
-
-  enviar();
 }
 
 // EXCLUIR
