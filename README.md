@@ -135,6 +135,7 @@ let dadosClientes = [];
 let chart;
 let filtro = "todos";
 let tocou = false;
+let editandoId = null;
 
 // LOGIN
 function entrar(){
@@ -201,6 +202,9 @@ async function carregar(){
       <p>${c.plano} - R$ ${c.valor}</p>
       <p>Início: ${c.data_de_inicio || '-'}</p>
       <p>Vence: ${c.vencimento}</p>
+
+      <button onclick="editar(${c.id})">✏️ Editar</button>
+      <button onclick="pago(${c.id})">✅ Pago</button>
       <button class="delete" onclick="del(${c.id})">Excluir</button>
       <button class="cobrar" onclick="cobrar('${c.whatsapp}','${c.nome}','${c.vencimento}')">Cobrar</button>
     </div>`;
@@ -244,23 +248,70 @@ async function carregar(){
   });
 }
 
-// SALVAR
+// SALVAR / EDITAR
 async function salvar(){
-  await client.from("Painel ftv").insert([{
-    id: Date.now(),
-    nome:nome.value,
-    whatsapp:whatsapp.value,
-    plano:plano.value,
-    valor:parseFloat(valor.value)||0,
-    data_de_inicio:inicio.value,
-    vencimento:vencimento.value
-  }]);
+
+  if(editandoId){
+    await client.from("Painel ftv")
+    .update({
+      nome:nome.value,
+      whatsapp:whatsapp.value,
+      plano:plano.value,
+      valor:parseFloat(valor.value)||0,
+      data_de_inicio:inicio.value,
+      vencimento:vencimento.value
+    })
+    .eq("id", editandoId);
+
+    editandoId=null;
+
+  } else {
+    await client.from("Painel ftv").insert([{
+      id: Date.now(),
+      nome:nome.value,
+      whatsapp:whatsapp.value,
+      plano:plano.value,
+      valor:parseFloat(valor.value)||0,
+      data_de_inicio:inicio.value,
+      vencimento:vencimento.value
+    }]);
+  }
 
   limpar();
   carregar();
 }
 
-// COBRAR
+// EDITAR
+function editar(id){
+  let c = dadosClientes.find(x=>x.id==id);
+
+  nome.value=c.nome;
+  whatsapp.value=c.whatsapp;
+  plano.value=c.plano;
+  valor.value=c.valor;
+  inicio.value=c.data_de_inicio;
+  vencimento.value=c.vencimento;
+
+  editandoId=id;
+}
+
+// PAGO (RENOVA +30 DIAS)
+async function pago(id){
+  let c = dadosClientes.find(x=>x.id==id);
+
+  let novaData = new Date(c.vencimento);
+  novaData.setDate(novaData.getDate()+30);
+
+  let formatada = novaData.toISOString().split("T")[0];
+
+  await client.from("Painel ftv")
+  .update({ vencimento: formatada })
+  .eq("id", id);
+
+  carregar();
+}
+
+// COBRANÇA
 function cobrar(whatsapp,nome,vencimento){
   let hoje=new Date();
   let v=new Date(vencimento);
