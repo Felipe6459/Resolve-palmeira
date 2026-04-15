@@ -9,45 +9,17 @@
 
 <style>
 body { margin:0; font-family:Arial; background:#0f172a; color:white; }
-
 .login { display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column; }
-
-input, button {
-  padding:10px;
-  margin:5px;
-  border:none;
-  border-radius:5px;
-}
-
+input, button { padding:10px; margin:5px; border:none; border-radius:5px; }
 button { background:#2563eb; color:white; cursor:pointer; }
-
 header { background:#1e3a8a; padding:20px; text-align:center; }
-
 .container { padding:20px; }
-
 .cards { display:flex; flex-wrap:wrap; gap:10px; }
-
-.box {
-  background:#1e293b;
-  padding:15px;
-  border-radius:10px;
-  flex:1;
-  text-align:center;
-}
-
-.card {
-  background:#1e293b;
-  padding:15px;
-  margin-top:10px;
-  border-radius:10px;
-}
-
+.box { background:#1e293b; padding:15px; border-radius:10px; flex:1; text-align:center; }
+.card { background:#1e293b; padding:15px; margin-top:10px; border-radius:10px; }
 .ativo { border-left:5px solid green; }
 .vencido { border-left:5px solid red; }
 .aviso { border-left:5px solid orange; }
-
-.cobrar { background:green; }
-.delete { background:red; }
 
 @keyframes piscar {
   0% { background:red; }
@@ -93,15 +65,7 @@ Painel IPTV PRO MAX
 
 <br>
 
-<button onclick="cobrarTodos()">📲 Cobrar Todos</button>
 <button onclick="cobrarAtrasados()">💸 Cobrar Atrasados</button>
-
-<br>
-
-<button onclick="filtro='todos'; carregar()">Todos</button>
-<button onclick="filtro='ativo'; carregar()">Ativos</button>
-<button onclick="filtro='aviso'; carregar()">Vencendo</button>
-<button onclick="filtro='vencido'; carregar()">Vencidos</button>
 
 <h3>Cadastro</h3>
 
@@ -128,14 +92,13 @@ const client = supabase.createClient(
   "sb_publishable_fsnaUk2uQmlq0d5r7MwFnA_FoO-wYkf"
 );
 
-const USUARIO = "admin";
-const SENHA = "1234";
+const USUARIO="admin";
+const SENHA="1234";
 
-let dadosClientes = [];
+let dadosClientes=[];
 let chart;
-let filtro = "todos";
-let tocou = false;
-let editandoId = null;
+let editandoId=null;
+let tocou=false;
 
 // LOGIN
 function entrar(){
@@ -172,18 +135,13 @@ function statusCalc(v){
 // CARREGAR
 async function carregar(){
   const { data } = await client.from("Painel ftv").select("*");
-  dadosClientes=data;
-
-  data.sort((a,b)=> new Date(a.vencimento)-new Date(b.vencimento));
+  dadosClientes = data || [];
 
   let t=0,a=0,v=0,av=0,r=0,rec=0,atr=0;
-  let planos={};
   let html="";
 
-  data.forEach(c=>{
+  dadosClientes.forEach(c=>{
     let status=statusCalc(c.vencimento);
-
-    if(filtro!=="todos" && status!==filtro) return;
 
     t++;
     if(status==="ativo") a++;
@@ -194,19 +152,15 @@ async function carregar(){
     if(status!=="vencido") rec+=Number(c.valor||0);
     if(status==="vencido") atr+=Number(c.valor||0);
 
-    planos[c.plano]=(planos[c.plano]||0)+1;
-
     html+=`
     <div class="card ${status}">
       <b>${c.nome}</b>
       <p>${c.plano} - R$ ${c.valor}</p>
-      <p>Início: ${c.data_de_inicio || '-'}</p>
       <p>Vence: ${c.vencimento}</p>
 
       <button onclick="editar(${c.id})">✏️ Editar</button>
       <button onclick="pago(${c.id})">✅ Pago</button>
-      <button class="delete" onclick="del(${c.id})">Excluir</button>
-      <button class="cobrar" onclick="cobrar('${c.whatsapp}','${c.nome}','${c.vencimento}')">Cobrar</button>
+      <button onclick="del(${c.id})">Excluir</button>
     </div>`;
   });
 
@@ -220,10 +174,9 @@ async function carregar(){
 
   lista.innerHTML=html;
 
-  // ALERTA + SOM
+  // ALERTA
   if(atr>0){
     alerta.style.display="block";
-
     if(!tocou){
       alertaSom.play().catch(()=>{});
       tocou=true;
@@ -232,26 +185,12 @@ async function carregar(){
     alerta.style.display="none";
     tocou=false;
   }
-
-  // GRAFICO
-  if(chart) chart.destroy();
-
-  chart=new Chart(document.getElementById("grafico"),{
-    type:"bar",
-    data:{
-      labels:Object.keys(planos),
-      datasets:[{
-        data:Object.values(planos),
-        backgroundColor:["#22c55e","#3b82f6","#f59e0b","#ef4444","#a855f7"]
-      }]
-    }
-  });
 }
 
-// SALVAR / EDITAR
+// SALVAR
 async function salvar(){
 
-  if(editandoId){
+  if(editandoId !== null){
     await client.from("Painel ftv")
     .update({
       nome:nome.value,
@@ -263,7 +202,7 @@ async function salvar(){
     })
     .eq("id", editandoId);
 
-    editandoId=null;
+    editandoId = null;
 
   } else {
     await client.from("Painel ftv").insert([{
@@ -281,23 +220,31 @@ async function salvar(){
   carregar();
 }
 
-// EDITAR
+// EDITAR (CORRIGIDO)
 function editar(id){
-  let c = dadosClientes.find(x=>x.id==id);
+  let c = dadosClientes.find(x => Number(x.id) === Number(id));
 
-  nome.value=c.nome;
-  whatsapp.value=c.whatsapp;
-  plano.value=c.plano;
-  valor.value=c.valor;
-  inicio.value=c.data_de_inicio;
-  vencimento.value=c.vencimento;
+  if(!c){
+    alert("Erro ao carregar cliente");
+    return;
+  }
 
-  editandoId=id;
+  nome.value = c.nome || "";
+  whatsapp.value = c.whatsapp || "";
+  plano.value = c.plano || "";
+  valor.value = c.valor || "";
+  inicio.value = c.data_de_inicio || "";
+  vencimento.value = c.vencimento || "";
+
+  editandoId = c.id;
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// PAGO (RENOVA +30 DIAS)
+// PAGO
 async function pago(id){
-  let c = dadosClientes.find(x=>x.id==id);
+  let c = dadosClientes.find(x => Number(x.id) === Number(id));
+  if(!c) return;
 
   let novaData = new Date(c.vencimento);
   novaData.setDate(novaData.getDate()+30);
@@ -309,50 +256,6 @@ async function pago(id){
   .eq("id", id);
 
   carregar();
-}
-
-// COBRANÇA
-function cobrar(whatsapp,nome,vencimento){
-  let hoje=new Date();
-  let v=new Date(vencimento);
-  let diff=Math.ceil((v-hoje)/(1000*60*60*24));
-
-  let msg="";
-  if(diff<0) msg=`🚨 ${nome}, seu plano venceu (${vencimento}).`;
-  else if(diff===0) msg=`⚠️ ${nome}, vence hoje!`;
-  else if(diff<=2) msg=`🔔 ${nome}, está para vencer.`;
-  else msg=`🙂 ${nome}, lembrete.`;
-
-  let num=whatsapp.replace(/\D/g,'');
-  window.open(`https://wa.me/55${num}?text=${encodeURIComponent(msg)}`);
-}
-
-// COBRAR TODOS
-function cobrarTodos(){
-  let i=0;
-  function enviar(){
-    if(i>=dadosClientes.length) return;
-    let c=dadosClientes[i];
-    cobrar(c.whatsapp,c.nome,c.vencimento);
-    i++;
-    setTimeout(enviar,1500);
-  }
-  enviar();
-}
-
-// COBRAR ATRASADOS
-function cobrarAtrasados(){
-  let lista = dadosClientes.filter(c=>statusCalc(c.vencimento)==="vencido");
-  let i=0;
-
-  function enviar(){
-    if(i>=lista.length) return;
-    let c=lista[i];
-    cobrar(c.whatsapp,c.nome,c.vencimento);
-    i++;
-    setTimeout(enviar,1500);
-  }
-  enviar();
 }
 
 // EXCLUIR
