@@ -8,48 +8,87 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body { margin:0; font-family:Arial; background:#0f172a; color:white; }
-.login { display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column; }
-
-input, button {
-  padding:10px;
-  margin:5px;
-  border:none;
-  border-radius:5px;
+body {
+  margin:0;
+  font-family:'Segoe UI', Arial;
+  background:#0f172a;
+  color:white;
 }
 
-button { background:#2563eb; color:white; cursor:pointer; }
+.login {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  flex-direction:column;
+}
 
-header { background:#1e3a8a; padding:20px; text-align:center; }
+input, button {
+  padding:12px;
+  margin:6px;
+  border:none;
+  border-radius:8px;
+}
+
+button {
+  background:#3b82f6;
+  color:white;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover { opacity:0.8; }
+
+header {
+  background:linear-gradient(90deg,#1e3a8a,#2563eb);
+  padding:20px;
+  text-align:center;
+  font-weight:bold;
+}
 
 .container { padding:20px; }
 
-.cards { display:flex; flex-wrap:wrap; gap:10px; }
+.cards {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
+  gap:10px;
+}
 
 .box {
   background:#1e293b;
   padding:15px;
-  border-radius:10px;
-  flex:1;
+  border-radius:12px;
   text-align:center;
+  box-shadow:0 0 10px rgba(0,0,0,0.3);
 }
 
 .card {
   background:#1e293b;
   padding:15px;
   margin-top:10px;
-  border-radius:10px;
+  border-radius:12px;
+  box-shadow:0 0 10px rgba(0,0,0,0.3);
 }
 
-.ativo { border-left:5px solid green; }
-.vencido { border-left:5px solid red; }
-.aviso { border-left:5px solid orange; }
+.ativo { border-left:5px solid #22c55e; }
+.vencido { border-left:5px solid #ef4444; }
+.aviso { border-left:5px solid #f59e0b; }
 
 @keyframes piscar {
-  0% { background:red; }
-  50% { background:darkred; }
-  100% { background:red; }
+  0% { background:#ef4444; }
+  50% { background:#7f1d1d; }
+  100% { background:#ef4444; }
 }
+
+canvas {
+  background:#1e293b;
+  border-radius:15px;
+  padding:15px;
+  margin-top:15px;
+}
+
+.delete { background:#ef4444; }
+.cobrar { background:#22c55e; }
 </style>
 </head>
 
@@ -121,6 +160,7 @@ const SENHA="1234";
 
 let dadosClientes=[];
 let editandoId=null;
+let chart;
 let tocou=false;
 
 // LOGIN
@@ -161,6 +201,7 @@ async function carregar(){
   dadosClientes = data || [];
 
   let t=0,a=0,v=0,av=0,r=0,rec=0,atr=0;
+  let planos={};
   let html="";
 
   dadosClientes.forEach(c=>{
@@ -175,6 +216,8 @@ async function carregar(){
     if(status!=="vencido") rec+=Number(c.valor||0);
     if(status==="vencido") atr+=Number(c.valor||0);
 
+    planos[c.plano]=(planos[c.plano]||0)+1;
+
     html+=`
     <div class="card ${status}">
       <b>${c.nome}</b>
@@ -183,7 +226,7 @@ async function carregar(){
 
       <button onclick="editar(${c.id})">✏️ Editar</button>
       <button onclick="pago(${c.id})">✅ Pago</button>
-      <button onclick="del(${c.id})">Excluir</button>
+      <button class="delete" onclick="del(${c.id})">Excluir</button>
     </div>`;
   });
 
@@ -197,21 +240,52 @@ async function carregar(){
 
   lista.innerHTML=html;
 
-  // ALERTA CORRIGIDO (100%)
-  let temAtraso = dadosClientes.some(c => statusCalc(c.vencimento) === "vencido");
+  // ALERTA
+  let temAtraso = dadosClientes.some(c => statusCalc(c.vencimento)==="vencido");
 
   if(temAtraso){
     alerta.style.display="block";
-
     if(!tocou){
       alertaSom.play().catch(()=>{});
       tocou=true;
     }
-
   } else {
     alerta.style.display="none";
     tocou=false;
   }
+
+  // GRÁFICO PROFISSIONAL
+  if(chart) chart.destroy();
+
+  chart = new Chart(document.getElementById("grafico"), {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(planos),
+      datasets: [{
+        data: Object.values(planos),
+        backgroundColor: [
+          "#3b82f6",
+          "#22c55e",
+          "#f59e0b",
+          "#ef4444",
+          "#a855f7",
+          "#06b6d4"
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { color:"#fff", font:{ size:13 } }
+        }
+      },
+      cutout: "70%",
+      animation: { animateScale:true }
+    }
+  });
 }
 
 // SALVAR / EDITAR
@@ -249,8 +323,8 @@ async function salvar(){
 
 // EDITAR
 function editar(id){
-  let c = dadosClientes.find(x => Number(x.id) === Number(id));
-  if(!c) return alert("Erro ao carregar");
+  let c = dadosClientes.find(x => Number(x.id)===Number(id));
+  if(!c) return;
 
   nome.value=c.nome||"";
   whatsapp.value=c.whatsapp||"";
@@ -260,13 +334,12 @@ function editar(id){
   vencimento.value=c.vencimento||"";
 
   editandoId=id;
-
   window.scrollTo({top:0, behavior:"smooth"});
 }
 
 // PAGO
 async function pago(id){
-  let c = dadosClientes.find(x => Number(x.id) === Number(id));
+  let c = dadosClientes.find(x => Number(x.id)===Number(id));
   if(!c) return;
 
   let novaData = new Date(c.vencimento);
@@ -291,8 +364,7 @@ function cobrarAtrasados(){
 
     let c=lista[i];
     let num=c.whatsapp.replace(/\D/g,'');
-
-    let msg=`🚨 ${c.nome}, seu plano está vencido (${c.vencimento}). Regularize para evitar bloqueio.`;
+    let msg=`🚨 ${c.nome}, seu plano está vencido (${c.vencimento}).`;
 
     window.open(`https://wa.me/55${num}?text=${encodeURIComponent(msg)}`);
 
