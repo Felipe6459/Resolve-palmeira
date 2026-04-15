@@ -10,13 +10,37 @@
 <style>
 body { margin:0; font-family:Arial; background:#0f172a; color:white; }
 .login { display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column; }
-input, button { padding:10px; margin:5px; border:none; border-radius:5px; }
+
+input, button {
+  padding:10px;
+  margin:5px;
+  border:none;
+  border-radius:5px;
+}
+
 button { background:#2563eb; color:white; cursor:pointer; }
+
 header { background:#1e3a8a; padding:20px; text-align:center; }
+
 .container { padding:20px; }
+
 .cards { display:flex; flex-wrap:wrap; gap:10px; }
-.box { background:#1e293b; padding:15px; border-radius:10px; flex:1; text-align:center; }
-.card { background:#1e293b; padding:15px; margin-top:10px; border-radius:10px; }
+
+.box {
+  background:#1e293b;
+  padding:15px;
+  border-radius:10px;
+  flex:1;
+  text-align:center;
+}
+
+.card {
+  background:#1e293b;
+  padding:15px;
+  margin-top:10px;
+  border-radius:10px;
+}
+
 .ativo { border-left:5px solid green; }
 .vencido { border-left:5px solid red; }
 .aviso { border-left:5px solid orange; }
@@ -48,7 +72,7 @@ Painel IPTV PRO MAX
 <div class="container">
 
 <div id="alerta" style="display:none; padding:15px; border-radius:10px; text-align:center; margin-bottom:10px; font-weight:bold; animation: piscar 1s infinite;">
-🚨 CLIENTES EM ATRASO!
+🚨 EXISTEM CLIENTES VENCIDOS! COBRE AGORA!
 </div>
 
 <div class="cards">
@@ -96,7 +120,6 @@ const USUARIO="admin";
 const SENHA="1234";
 
 let dadosClientes=[];
-let chart;
 let editandoId=null;
 let tocou=false;
 
@@ -174,32 +197,24 @@ async function carregar(){
 
   lista.innerHTML=html;
 
-  // ALERTA
+  // ALERTA CORRIGIDO (100%)
   let temAtraso = dadosClientes.some(c => statusCalc(c.vencimento) === "vencido");
 
-if(temAtraso){
-  alerta.style.display="block";
+  if(temAtraso){
+    alerta.style.display="block";
 
-  if(!tocou){
-    alertaSom.play().catch(()=>{});
-    tocou=true;
-  }
-
-} else {
-  alerta.style.display="none";
-  tocou=false;
-}
     if(!tocou){
       alertaSom.play().catch(()=>{});
       tocou=true;
     }
+
   } else {
     alerta.style.display="none";
     tocou=false;
   }
 }
 
-// SALVAR
+// SALVAR / EDITAR
 async function salvar(){
 
   if(editandoId !== null){
@@ -214,7 +229,7 @@ async function salvar(){
     })
     .eq("id", editandoId);
 
-    editandoId = null;
+    editandoId=null;
 
   } else {
     await client.from("Painel ftv").insert([{
@@ -232,25 +247,21 @@ async function salvar(){
   carregar();
 }
 
-// EDITAR (CORRIGIDO)
+// EDITAR
 function editar(id){
   let c = dadosClientes.find(x => Number(x.id) === Number(id));
+  if(!c) return alert("Erro ao carregar");
 
-  if(!c){
-    alert("Erro ao carregar cliente");
-    return;
-  }
+  nome.value=c.nome||"";
+  whatsapp.value=c.whatsapp||"";
+  plano.value=c.plano||"";
+  valor.value=c.valor||"";
+  inicio.value=c.data_de_inicio||"";
+  vencimento.value=c.vencimento||"";
 
-  nome.value = c.nome || "";
-  whatsapp.value = c.whatsapp || "";
-  plano.value = c.plano || "";
-  valor.value = c.valor || "";
-  inicio.value = c.data_de_inicio || "";
-  vencimento.value = c.vencimento || "";
+  editandoId=id;
 
-  editandoId = c.id;
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({top:0, behavior:"smooth"});
 }
 
 // PAGO
@@ -268,6 +279,28 @@ async function pago(id){
   .eq("id", id);
 
   carregar();
+}
+
+// COBRAR ATRASADOS
+function cobrarAtrasados(){
+  let lista = dadosClientes.filter(c=>statusCalc(c.vencimento)==="vencido");
+  let i=0;
+
+  function enviar(){
+    if(i>=lista.length) return;
+
+    let c=lista[i];
+    let num=c.whatsapp.replace(/\D/g,'');
+
+    let msg=`🚨 ${c.nome}, seu plano está vencido (${c.vencimento}). Regularize para evitar bloqueio.`;
+
+    window.open(`https://wa.me/55${num}?text=${encodeURIComponent(msg)}`);
+
+    i++;
+    setTimeout(enviar,1500);
+  }
+
+  enviar();
 }
 
 // EXCLUIR
