@@ -2,232 +2,323 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cineplay TV</title>
+<title>Painel IPTV PRO MAX</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;max-width:100%}
-html,body{overflow-x:hidden;font-family:Arial;background:#0b0b0b;color:#fff;text-align:center}
+body { margin:0; font-family:Arial; background:#0f172a; color:white; }
 
-.header{background:#7b2cff;padding:12px;font-weight:bold}
+.login { display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column; }
 
-.banner{
-background:url('https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=1200&auto=format&fit=crop') center/cover no-repeat;
-padding:70px 20px;
+input, button {
+  padding:10px;
+  margin:5px;
+  border:none;
+  border-radius:5px;
 }
 
-.overlay{background:rgba(0,0,0,0.7);padding:30px;border-radius:10px}
+button { background:#2563eb; color:white; cursor:pointer; }
 
-.container{padding:20px}
+header { background:#1e3a8a; padding:20px; text-align:center; }
 
-.btn{
-display:block;margin:12px auto;padding:15px;background:#ff2d2d;color:#fff;
-text-decoration:none;border-radius:12px;width:90%;max-width:320px;
-font-weight:bold;animation:pulsar 1.2s infinite;
+.container { padding:20px; }
+
+.cards { display:flex; flex-wrap:wrap; gap:10px; }
+
+.box {
+  background:#1e293b;
+  padding:15px;
+  border-radius:10px;
+  flex:1;
+  text-align:center;
 }
 
-.card{background:#1a1a1a;margin:15px auto;padding:20px;border-radius:15px;max-width:350px}
-
-.highlight{border:2px solid #7b2cff}
-
-.price{font-size:22px;color:#7b2cff;margin:10px 0}
-
-.review{
-background:#111;padding:15px;margin:10px auto;border-radius:10px;
-max-width:320px;display:flex;align-items:center;gap:10px
+.card {
+  background:#1e293b;
+  padding:15px;
+  margin-top:10px;
+  border-radius:10px;
 }
 
-.review img{width:40px;height:40px;border-radius:50%}
+.ativo { border-left:5px solid green; }
+.vencido { border-left:5px solid red; }
+.aviso { border-left:5px solid orange; }
 
-.footer{margin-top:30px;padding:20px;font-size:14px;color:#aaa}
+.cobrar { background:green; }
+.delete { background:red; }
 
-.popup{
-position:fixed;bottom:10px;left:10px;background:#111;padding:10px 15px;
-border-radius:10px;font-size:13px;display:none
-}
-
-.whatsapp-float{
-position:fixed;bottom:20px;right:20px;
-}
-
-.instagram-float{
-position:fixed;bottom:90px;right:20px;
-}
-
-@keyframes pulsar{
-0%{transform:scale(1)}
-50%{transform:scale(1.08)}
-100%{transform:scale(1)}
+@keyframes piscar {
+  0% { background:red; }
+  50% { background:darkred; }
+  100% { background:red; }
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-🔥 OFERTA TERMINA EM <span id="timer"></span>
-<p style="color:red;">⚠️ Restam poucas vagas hoje</p>
+<div id="login" class="login">
+  <h2>Login</h2>
+  <input id="user" placeholder="Usuário">
+  <input id="pass" type="password" placeholder="Senha">
+  <button onclick="entrar()">Entrar</button>
 </div>
 
-<div class="banner">
-<div class="overlay">
+<div id="painel" style="display:none">
 
-<h1>🎬 Cineplay TV</h1>
-
-<!-- VIDEO -->
-<div style="margin-top:20px;">
-<iframe width="100%" height="220"
-src="https://www.youtube.com/embed/K3QLrvM39fw"
-frameborder="0" allowfullscreen style="border-radius:10px;">
-</iframe>
-</div>
-
-<h2 style="color:#ff4444;">
-🔥 Cancele Netflix e pague mais barato
-</h2>
-
-<p>
-🎬 +100 MIL conteúdos<br>
-📺 Canais ao vivo<br>
-⚡ Sem travar
-</p>
-
-<a class="btn" onclick="abrirCaptura()">
-🎁 LIBERAR TESTE GRÁTIS
-</a>
-
-<p style="color:#00ff88;">
-🚀 Acesso liberado em poucos minutos<br>
-👥 <span id="online">12</span> pessoas vendo agora
-</p>
-
-<p style="color:#ff4444;font-weight:bold;">
-⚠️ Restam apenas <span id="vagas">7</span> vagas hoje
-</p>
-
-</div>
-</div>
+<header>
+Painel IPTV PRO MAX
+<button onclick="sair()">Sair</button>
+</header>
 
 <div class="container">
 
-<h2>📺 Compatibilidade</h2>
-<a class="btn" href="compatibilidade.html">
-VER SUA TV
-</a>
-
-<h2>⭐ Avaliações</h2>
-
-<div class="review">
-<img src="https://randomuser.me/api/portraits/men/32.jpg">
-<p>Top demais</p>
+<div id="alerta" style="display:none; padding:15px; border-radius:10px; text-align:center; margin-bottom:10px; font-weight:bold; animation: piscar 1s infinite;">
+🚨 CLIENTES EM ATRASO!
 </div>
 
-<div class="review">
-<img src="https://randomuser.me/api/portraits/women/45.jpg">
-<p>Melhor que Netflix</p>
+<div class="cards">
+  <div class="box">Total<br><span id="total">0</span></div>
+  <div class="box">Ativos<br><span id="ativos">0</span></div>
+  <div class="box">Vencendo<br><span id="aviso">0</span></div>
+  <div class="box">Vencidos<br><span id="vencidos">0</span></div>
+  <div class="box">💰 Receita<br>R$ <span id="receita">0</span></div>
+  <div class="box">📅 A Receber<br>R$ <span id="receber">0</span></div>
+  <div class="box">💸 Em atraso<br>R$ <span id="atrasado">0</span></div>
 </div>
 
-<h2>💰 Planos</h2>
+<canvas id="grafico"></canvas>
 
-<div class="card">
-<h3>1 Tela</h3>
-<div class="price">R$ 24,90</div>
-</div>
+<br>
 
-<div class="card highlight">
-<h3>2 Telas</h3>
-<div class="price">R$ 34,90</div>
-</div>
+<button onclick="cobrarTodos()">📲 Cobrar Todos</button>
+<button onclick="cobrarAtrasados()">💸 Cobrar Atrasados</button>
 
-<h2>❓ Dúvidas</h2>
+<br>
 
-<div class="card">
-<p><b>Vai travar?</b></p>
-<p>Não!</p>
-</div>
+<button onclick="filtro='todos'; carregar()">Todos</button>
+<button onclick="filtro='ativo'; carregar()">Ativos</button>
+<button onclick="filtro='aviso'; carregar()">Vencendo</button>
+<button onclick="filtro='vencido'; carregar()">Vencidos</button>
 
-<div class="card">
-<p><b>Funciona na TV?</b></p>
-<p>Sim, todas!</p>
-</div>
+<h3>Cadastro</h3>
 
-<h2>🔥 Ative agora</h2>
+<input id="nome" placeholder="Nome">
+<input id="whatsapp" placeholder="WhatsApp">
+<input id="plano" placeholder="Plano">
+<input id="valor" type="number" placeholder="Valor">
+<br>
+<input type="date" id="inicio">
+<input type="date" id="vencimento">
 
-<a class="btn" href="https://wa.me/5582996062108">
-🚀 ATIVAR AGORA
-</a>
+<button onclick="salvar()">Salvar</button>
+
+<div id="lista"></div>
 
 </div>
-
-<div class="footer">© Cineplay TV</div>
-
-<!-- WHATSAPP -->
-<a class="whatsapp-float" href="https://wa.me/5582996062108">
-<img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="50">
-</a>
-
-<!-- INSTAGRAM -->
-<a class="instagram-float" href="https://www.instagram.com/cineplayofc64" target="_blank">
-<img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" width="50">
-</a>
-
-<!-- POPUP CAPTURA -->
-<div id="captura" style="display:none;position:fixed;top:50%;left:50%;
-transform:translate(-50%,-50%);background:#111;padding:20px;border-radius:15px;z-index:9999;">
-
-<h3>🎁 Libere seu teste</h3>
-
-<input type="text" id="numero" placeholder="Seu WhatsApp">
-
-<br><br>
-
-<button onclick="enviarWhats()">ATIVAR</button>
-
-<br><br>
-
-<button onclick="fecharCaptura()">Fechar</button>
-
 </div>
+
+<audio id="alertaSom" src="https://www.soundjay.com/buttons/sounds/beep-01a.mp3"></audio>
 
 <script>
+const client = supabase.createClient(
+  "https://nghgqcgsuyyytrpfvfzh.supabase.co",
+  "sb_publishable_fsnaUk2uQmlq0d5r7MwFnA_FoO-wYkf"
+);
 
-function abrirCaptura(){
-document.getElementById("captura").style.display = "block";
+const USUARIO = "admin";
+const SENHA = "1234";
+
+let dadosClientes = [];
+let chart;
+let filtro = "todos";
+let tocou = false;
+
+// LOGIN
+function entrar(){
+  if(user.value===USUARIO && pass.value===SENHA){
+    localStorage.setItem("logado","sim");
+    mostrar();
+  } else alert("Login inválido");
 }
 
-function fecharCaptura(){
-document.getElementById("captura").style.display = "none";
+function sair(){
+  localStorage.removeItem("logado");
+  location.reload();
 }
 
-function enviarWhats(){
-let numero = document.getElementById("numero").value;
-window.location.href = "https://wa.me/5582996062108?text=Quero teste - " + numero;
+function mostrar(){
+  login.style.display="none";
+  painel.style.display="block";
+  carregar();
 }
 
-// TIMER
-let time=600;
-setInterval(()=>{
-let m=Math.floor(time/60);
-let s=time%60;
-document.getElementById('timer').innerHTML=m+":"+(s<10?'0':'')+s;
-time--;
-if(time<0) time=600;
-},1000);
+if(localStorage.getItem("logado")==="sim") mostrar();
 
-// ONLINE
-setInterval(()=>{
-document.getElementById("online").innerHTML = Math.floor(Math.random()*10)+10;
-},3000);
+// STATUS
+function statusCalc(v){
+  let hoje=new Date();
+  let d=new Date(v);
+  let diff=Math.ceil((d-hoje)/(1000*60*60*24));
 
-// VAGAS
-let vagas=7;
-setInterval(()=>{
-if(vagas>3){
-vagas--;
-document.getElementById("vagas").innerHTML=vagas;
+  if(diff<0) return "vencido";
+  if(diff<=2) return "aviso";
+  return "ativo";
 }
-},8000);
 
+// CARREGAR
+async function carregar(){
+  const { data } = await client.from("Painel ftv").select("*");
+  dadosClientes=data;
+
+  data.sort((a,b)=> new Date(a.vencimento)-new Date(b.vencimento));
+
+  let t=0,a=0,v=0,av=0,r=0,rec=0,atr=0;
+  let planos={};
+  let html="";
+
+  data.forEach(c=>{
+    let status=statusCalc(c.vencimento);
+
+    if(filtro!=="todos" && status!==filtro) return;
+
+    t++;
+    if(status==="ativo") a++;
+    if(status==="vencido") v++;
+    if(status==="aviso") av++;
+
+    r+=Number(c.valor||0);
+    if(status!=="vencido") rec+=Number(c.valor||0);
+    if(status==="vencido") atr+=Number(c.valor||0);
+
+    planos[c.plano]=(planos[c.plano]||0)+1;
+
+    html+=`
+    <div class="card ${status}">
+      <b>${c.nome}</b>
+      <p>${c.plano} - R$ ${c.valor}</p>
+      <p>Início: ${c.data_de_inicio || '-'}</p>
+      <p>Vence: ${c.vencimento}</p>
+      <button class="delete" onclick="del(${c.id})">Excluir</button>
+      <button class="cobrar" onclick="cobrar('${c.whatsapp}','${c.nome}','${c.vencimento}')">Cobrar</button>
+    </div>`;
+  });
+
+  total.innerText=t;
+  ativos.innerText=a;
+  vencidos.innerText=v;
+  aviso.innerText=av;
+  receita.innerText=r.toFixed(2);
+  receber.innerText=rec.toFixed(2);
+  atrasado.innerText=atr.toFixed(2);
+
+  lista.innerHTML=html;
+
+  // ALERTA + SOM
+  if(atr>0){
+    alerta.style.display="block";
+
+    if(!tocou){
+      alertaSom.play().catch(()=>{});
+      tocou=true;
+    }
+  } else {
+    alerta.style.display="none";
+    tocou=false;
+  }
+
+  // GRAFICO
+  if(chart) chart.destroy();
+
+  chart=new Chart(document.getElementById("grafico"),{
+    type:"bar",
+    data:{
+      labels:Object.keys(planos),
+      datasets:[{
+        data:Object.values(planos),
+        backgroundColor:["#22c55e","#3b82f6","#f59e0b","#ef4444","#a855f7"]
+      }]
+    }
+  });
+}
+
+// SALVAR
+async function salvar(){
+  await client.from("Painel ftv").insert([{
+    id: Date.now(),
+    nome:nome.value,
+    whatsapp:whatsapp.value,
+    plano:plano.value,
+    valor:parseFloat(valor.value)||0,
+    data_de_inicio:inicio.value,
+    vencimento:vencimento.value
+  }]);
+
+  limpar();
+  carregar();
+}
+
+// COBRAR
+function cobrar(whatsapp,nome,vencimento){
+  let hoje=new Date();
+  let v=new Date(vencimento);
+  let diff=Math.ceil((v-hoje)/(1000*60*60*24));
+
+  let msg="";
+  if(diff<0) msg=`🚨 ${nome}, seu plano venceu (${vencimento}).`;
+  else if(diff===0) msg=`⚠️ ${nome}, vence hoje!`;
+  else if(diff<=2) msg=`🔔 ${nome}, está para vencer.`;
+  else msg=`🙂 ${nome}, lembrete.`;
+
+  let num=whatsapp.replace(/\D/g,'');
+  window.open(`https://wa.me/55${num}?text=${encodeURIComponent(msg)}`);
+}
+
+// COBRAR TODOS
+function cobrarTodos(){
+  let i=0;
+  function enviar(){
+    if(i>=dadosClientes.length) return;
+    let c=dadosClientes[i];
+    cobrar(c.whatsapp,c.nome,c.vencimento);
+    i++;
+    setTimeout(enviar,1500);
+  }
+  enviar();
+}
+
+// COBRAR ATRASADOS
+function cobrarAtrasados(){
+  let lista = dadosClientes.filter(c=>statusCalc(c.vencimento)==="vencido");
+  let i=0;
+
+  function enviar(){
+    if(i>=lista.length) return;
+    let c=lista[i];
+    cobrar(c.whatsapp,c.nome,c.vencimento);
+    i++;
+    setTimeout(enviar,1500);
+  }
+  enviar();
+}
+
+// EXCLUIR
+async function del(id){
+  await client.from("Painel ftv").delete().eq("id",id);
+  carregar();
+}
+
+// LIMPAR
+function limpar(){
+  nome.value="";
+  whatsapp.value="";
+  plano.value="";
+  valor.value="";
+  inicio.value="";
+  vencimento.value="";
+}
 </script>
 
 </body>
