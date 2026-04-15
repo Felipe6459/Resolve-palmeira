@@ -175,8 +175,20 @@ async function carregar(){
   lista.innerHTML=html;
 
   // ALERTA
-  if(atr>0){
-    alerta.style.display="block";
+  let temAtraso = dadosClientes.some(c => statusCalc(c.vencimento) === "vencido");
+
+if(temAtraso){
+  alerta.style.display="block";
+
+  if(!tocou){
+    alertaSom.play().catch(()=>{});
+    tocou=true;
+  }
+
+} else {
+  alerta.style.display="none";
+  tocou=false;
+}
     if(!tocou){
       alertaSom.play().catch(()=>{});
       tocou=true;
