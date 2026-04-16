@@ -91,7 +91,15 @@ canvas {
 
 <body>
 
-<div id="login" class="login">
+<div id="auth" class="login">
+  <h2>Entrar ou Criar Conta</h2>
+
+  <input id="email" placeholder="Email">
+  <input id="senha" type="password" placeholder="Senha">
+
+  <button onclick="login()">Entrar</button>
+  <button onclick="criar()">Criar Conta</button>
+</div>
   <h2>Login</h2>
   <input id="user" placeholder="Usuário">
   <input id="pass" type="password" placeholder="Senha">
@@ -148,9 +156,6 @@ const client = supabase.createClient(
   "sb_publishable_fsnaUk2uQmlq0d5r7MwFnA_FoO-wYkf"
 );
 
-const USUARIO="admin";
-const SENHA="1234";
-
 let dadosClientes=[];
 let editandoId=null;
 let chart;
@@ -160,9 +165,6 @@ let modoGrafico="clientes";
 let intervaloGrafico;
 
 // LOGIN
-function entrar(){
-  if(user.value===USUARIO && pass.value===SENHA){
-    localStorage.setItem("logado","sim");
     mostrar();
   } else alert("Login inválido");
 }
@@ -224,7 +226,9 @@ const centerTextPlugin={
 
 // CARREGAR
 async function carregar(){
-  const { data } = await client.from("Painel ftv").select("*");
+  const { data } = await client.from("Painel ftv")
+.select("*")
+.eq("user_id", user.id)
   dadosClientes = data || [];
 
   let t=0,a=0,v=0,av=0,r=0,rec=0,atr=0;
@@ -356,7 +360,7 @@ async function salvar(){
       valor:parseFloat(valor.value)||0,
       data_de_inicio:inicio.value,
       vencimento:vencimento.value
-    }]);
+    }]);user_id: user.id
   }
 
   limpar();
@@ -408,6 +412,55 @@ function limpar(){
   valor.value="";
   inicio.value="";
   vencimento.value="";
+}
+  let user = null;
+
+// CRIAR CONTA
+async function criar(){
+  const { error } = await client.auth.signUp({
+    email: email.value,
+    password: senha.value
+  });
+
+  if(error) return alert(error.message);
+  alert("Conta criada!");
+}
+
+// LOGIN
+async function login(){
+  const { data, error } = await client.auth.signInWithPassword({
+    email: email.value,
+    password: senha.value
+  });
+
+  if(error) return alert(error.message);
+
+  user = data.user;
+  iniciarSistema();
+}
+
+// LOGOUT
+async function sair(){
+  await client.auth.signOut();
+  location.reload();
+}
+
+// AUTO LOGIN
+async function verificarUsuario(){
+  const { data } = await client.auth.getUser();
+
+  if(data.user){
+    user = data.user;
+    iniciarSistema();
+  }
+}
+verificarUsuario();
+
+// INICIAR
+function iniciarSistema(){
+  document.getElementById("auth").style.display = "none";
+  document.getElementById("painel").style.display = "block";
+  carregar();
 }
 </script>
 
