@@ -76,7 +76,12 @@ canvas {
   margin:20px auto;
   display:block;
   max-width:350px;
-  max-height:350px;
+}
+
+@keyframes piscar {
+  0% { background:#ef4444; }
+  50% { background:#7f1d1d; }
+  100% { background:#ef4444; }
 }
 
 .delete { background:#ef4444; }
@@ -101,8 +106,17 @@ Painel IPTV PRO MAX
 
 <div class="container">
 
-<div id="alerta" style="display:none; padding:15px; border-radius:10px; text-align:center; margin-bottom:10px; font-weight:bold;">
+<!-- ALERTAS -->
+<div id="alertaVencido" style="display:none; padding:15px; border-radius:10px; text-align:center; margin-bottom:10px; font-weight:bold; animation: piscar 1s infinite;">
 🚨 EXISTEM CLIENTES VENCIDOS!
+</div>
+
+<div id="alertaHoje" style="display:none; padding:15px; border-radius:10px; text-align:center; margin-bottom:10px; font-weight:bold; background:#f59e0b;">
+⚠️ CLIENTES VENCEM HOJE!
+</div>
+
+<div id="alertaAviso" style="display:none; padding:15px; border-radius:10px; text-align:center; margin-bottom:10px; font-weight:bold; background:#fbbf24;">
+📅 CLIENTES VENCEM EM BREVE!
 </div>
 
 <div class="cards">
@@ -117,10 +131,10 @@ Painel IPTV PRO MAX
 
 <canvas id="grafico"></canvas>
 
-<!-- BOTÃO NOVO -->
-<button onclick="cobrarVencidos()" style="background:#ef4444;">
-💰 Cobrar todos vencidos
-</button>
+<!-- BOTÕES -->
+<button onclick="cobrarVencidos()" style="background:#ef4444;">💰 Cobrar vencidos</button>
+<button onclick="cobrarHoje()" style="background:#f59e0b;">⚠️ Cobrar hoje</button>
+<button onclick="avisarProximos()" style="background:#fbbf24;">📅 Avisar próximos</button>
 
 <h3>Cadastro</h3>
 
@@ -190,11 +204,19 @@ async function carregar(){
   dadosClientes = data || [];
 
   let t=0,a=0,v=0,av=0,r=0,rec=0,atr=0;
-  let planosClientes={};
-  let html="";
+  let planosClientes={}, html="";
+
+  let hoje = new Date();
+  let temVencido=false, venceHoje=false, aviso=false;
 
   dadosClientes.forEach(c=>{
     let status=statusCalc(c.vencimento);
+    let data = new Date(c.vencimento);
+    let diff=Math.ceil((data-hoje)/(1000*60*60*24));
+
+    if(diff<0) temVencido=true;
+    if(diff===0) venceHoje=true;
+    if(diff===1 || diff===2) aviso=true;
 
     t++;
     if(status==="ativo") a++;
@@ -230,6 +252,10 @@ async function carregar(){
 
   lista.innerHTML=html;
 
+  alertaVencido.style.display = temVencido ? "block" : "none";
+  alertaHoje.style.display = venceHoje ? "block" : "none";
+  alertaAviso.style.display = aviso ? "block" : "none";
+
   atualizarGrafico(planosClientes);
 }
 
@@ -246,15 +272,13 @@ function atualizarGrafico(planosClientes){
       labels:labels,
       datasets:[{
         data:dados,
-        backgroundColor:[
-          "#3b82f6","#22c55e","#f59e0b","#ef4444","#a855f7","#06b6d4"
-        ]
+        backgroundColor:["#3b82f6","#22c55e","#f59e0b","#ef4444"]
       }]
     }
   });
 }
 
-// WHATS INDIVIDUAL INTELIGENTE
+// WHATS
 function whats(id){
   let c = dadosClientes.find(x => Number(x.id) === Number(id));
   if(!c) return;
@@ -262,55 +286,65 @@ function whats(id){
   let numero = c.whatsapp.replace(/\D/g, "");
   let status = statusCalc(c.vencimento);
 
-  let msg = "";
+  let msg="";
+  if(status==="vencido") msg=`🚨 ${c.nome}, seu plano está vencido!`;
+  if(status==="aviso") msg=`📅 ${c.nome}, seu plano vence em breve (${c.vencimento})`;
+  if(status==="ativo") msg=`✅ ${c.nome}, seu plano está ativo`;
 
-  if(status === "ativo"){
-    msg = `Olá ${c.nome}, tudo certo?\nSeu plano está ativo até ${c.vencimento}.`;
-  }
-
-  if(status === "aviso"){
-    msg = `Olá ${c.nome}, seu plano vence em breve (${c.vencimento}).`;
-  }
-
-  if(status === "vencido"){
-    msg = `Olá ${c.nome}, seu plano está vencido desde ${c.vencimento}.`;
-  }
-
-  let link = `https://wa.me/55${numero}?text=${encodeURIComponent(msg)}`;
-  window.open(link, "_blank");
+  window.open(`https://wa.me/55${numero}?text=${encodeURIComponent(msg)}`);
 }
 
-// COBRAR TODOS
-function cobrarVencidos(){
-  let vencidos = dadosClientes.filter(c => statusCalc(c.vencimento) === "vencido");
+// DISPARO GERAL
+function disparar(lista, tipo){
+  if(lista.length===0) return alert("Nenhum cliente");
 
-  if(vencidos.length === 0){
-    alert("Nenhum cliente vencido");
-    return;
-  }
+  lista.forEach((c,i)=>{
+    let numero=c.whatsapp.replace(/\D/g,"");
+    let msg="";
 
-  vencidos.forEach((c, i) => {
-    let numero = c.whatsapp.replace(/\D/g, "");
-    let msg = `Olá ${c.nome}, seu plano está vencido.\nRegularize para continuar usando.`;
+    if(tipo==="vencido") msg=`🚨 ${c.nome}, plano vencido!`;
+    if(tipo==="hoje") msg=`⚠️ ${c.nome}, vence hoje!`;
+    if(tipo==="aviso") msg=`📅 ${c.nome}, vence em breve!`;
 
-    let link = `https://wa.me/55${numero}?text=${encodeURIComponent(msg)}`;
-
-    setTimeout(() => window.open(link, "_blank"), i * 800);
+    setTimeout(()=>{
+      window.open(`https://wa.me/55${numero}?text=${encodeURIComponent(msg)}`);
+    }, i*800);
   });
 }
 
-// SALVAR
+// BOTÕES
+function cobrarVencidos(){
+  disparar(dadosClientes.filter(c=>statusCalc(c.vencimento)==="vencido"),"vencido");
+}
+
+function cobrarHoje(){
+  let hoje=new Date();
+  disparar(dadosClientes.filter(c=>{
+    let d=new Date(c.vencimento);
+    return Math.ceil((d-hoje)/(1000*60*60*24))===0;
+  }),"hoje");
+}
+
+function avisarProximos(){
+  let hoje=new Date();
+  disparar(dadosClientes.filter(c=>{
+    let d=new Date(c.vencimento);
+    let diff=Math.ceil((d-hoje)/(1000*60*60*24));
+    return diff===1 || diff===2;
+  }),"aviso");
+}
+
+// CRUD
 async function salvar(){
-  if(editandoId!==null){
+  if(editandoId){
     await client.from("Painel ftv").update({
       nome:nome.value,
       whatsapp:whatsapp.value,
       plano:plano.value,
-      valor:parseFloat(valor.value)||0,
+      valor:valor.value,
       data_de_inicio:inicio.value,
       vencimento:vencimento.value
     }).eq("id",editandoId);
-
     editandoId=null;
   } else {
     await client.from("Painel ftv").insert([{
@@ -318,54 +352,39 @@ async function salvar(){
       nome:nome.value,
       whatsapp:whatsapp.value,
       plano:plano.value,
-      valor:parseFloat(valor.value)||0,
+      valor:valor.value,
       data_de_inicio:inicio.value,
       vencimento:vencimento.value
     }]);
   }
-
   limpar();
   carregar();
 }
 
-// EDITAR
 function editar(id){
-  let c=dadosClientes.find(x=>Number(x.id)===Number(id));
-  if(!c) return;
-
-  nome.value=c.nome||"";
-  whatsapp.value=c.whatsapp||"";
-  plano.value=c.plano||"";
-  valor.value=c.valor||"";
-  inicio.value=c.data_de_inicio||"";
-  vencimento.value=c.vencimento||"";
-
+  let c=dadosClientes.find(x=>x.id==id);
+  nome.value=c.nome;
+  whatsapp.value=c.whatsapp;
+  plano.value=c.plano;
+  valor.value=c.valor;
+  inicio.value=c.data_de_inicio;
+  vencimento.value=c.vencimento;
   editandoId=id;
-  window.scrollTo({top:0,behavior:"smooth"});
 }
 
-// PAGO
 async function pago(id){
-  let c=dadosClientes.find(x=>Number(x.id)===Number(id));
-  if(!c) return;
-
+  let c=dadosClientes.find(x=>x.id==id);
   let nova=new Date(c.vencimento);
   nova.setDate(nova.getDate()+30);
-
-  let formatada=nova.toISOString().split("T")[0];
-
-  await client.from("Painel ftv").update({vencimento:formatada}).eq("id",id);
-
+  await client.from("Painel ftv").update({vencimento:nova.toISOString().split("T")[0]}).eq("id",id);
   carregar();
 }
 
-// EXCLUIR
 async function del(id){
   await client.from("Painel ftv").delete().eq("id",id);
   carregar();
 }
 
-// LIMPAR
 function limpar(){
   nome.value="";
   whatsapp.value="";
