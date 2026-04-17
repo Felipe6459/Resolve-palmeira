@@ -191,46 +191,49 @@ function statusCalc(v){
   return "ativo";
 }
 
-// PLUGIN CENTRO
-const centerTextPlugin={
-  id:'centerText',
-  beforeDraw(chart){
-    const {width,height}=chart;
-    const ctx=chart.ctx;
-
-    let total=chart.config.data.datasets[0].data.reduce((a,b)=>a+b,0);
-
-    ctx.save();
-    ctx.font="bold 20px Arial";
-    ctx.fillStyle="#fff";
-    ctx.textAlign="center";
-    ctx.textBaseline="middle";
-
-    ctx.fillText(total,width/2,height/2);
-    ctx.restore();
-  }
-};
-
 // CARREGAR
 async function carregar(){
   const { data } = await client.from("Painel ftv").select("*");
   dadosClientes = data || [];
 
-  let planosClientes={};
+  let t=0,a=0,v=0,av=0,r=0,rec=0,atr=0;
+  let planosClientes={}, planosValor={};
   let html="";
 
   dadosClientes.forEach(c=>{
     let status=statusCalc(c.vencimento);
 
+    t++;
+    if(status==="ativo") a++;
+    if(status==="vencido") v++;
+    if(status==="aviso") av++;
+
+    r+=Number(c.valor||0);
+    if(status!=="vencido") rec+=Number(c.valor||0);
+    if(status==="vencido") atr+=Number(c.valor||0);
+
     planosClientes[c.plano]=(planosClientes[c.plano]||0)+1;
+    planosValor[c.plano]=(planosValor[c.plano]||0)+Number(c.valor||0);
 
     html+=`
     <div class="card ${status}">
       <b>${c.nome}</b>
       <p>${c.plano} - R$ ${c.valor}</p>
       <p>Vence: ${c.vencimento}</p>
+
+      <button onclick="editar(${c.id})">✏️</button>
+      <button onclick="pago(${c.id})">✅</button>
+      <button class="delete" onclick="del(${c.id})">🗑️</button>
     </div>`;
   });
+
+  total.innerText=t;
+  ativos.innerText=a;
+  vencidos.innerText=v;
+  aviso.innerText=av;
+  receita.innerText=r.toFixed(2);
+  receber.innerText=rec.toFixed(2);
+  atrasado.innerText=atr.toFixed(2);
 
   lista.innerHTML=html;
 
@@ -250,16 +253,88 @@ function atualizarGrafico(planosClientes){
       labels:labels,
       datasets:[{
         data:dados,
-        backgroundColor:["#3b82f6","#22c55e","#f59e0b","#ef4444"]
+        backgroundColor:[
+          "#3b82f6","#22c55e","#f59e0b","#ef4444","#a855f7","#06b6d4"
+        ]
       }]
-    },
-    options:{
-      plugins:{
-        legend:{ position:"bottom" }
-      }
-    },
-    plugins:[centerTextPlugin]
+    }
   });
+}
+
+// SALVAR
+async function salvar(){
+  if(editandoId!==null){
+    await client.from("Painel ftv").update({
+      nome:nome.value,
+      whatsapp:whatsapp.value,
+      plano:plano.value,
+      valor:parseFloat(valor.value)||0,
+      data_de_inicio:inicio.value,
+      vencimento:vencimento.value
+    }).eq("id",editandoId);
+
+    editandoId=null;
+  } else {
+    await client.from("Painel ftv").insert([{
+      id:Date.now(),
+      nome:nome.value,
+      whatsapp:whatsapp.value,
+      plano:plano.value,
+      valor:parseFloat(valor.value)||0,
+      data_de_inicio:inicio.value,
+      vencimento:vencimento.value
+    }]);
+  }
+
+  limpar();
+  carregar();
+}
+
+// EDITAR
+function editar(id){
+  let c=dadosClientes.find(x=>Number(x.id)===Number(id));
+  if(!c) return;
+
+  nome.value=c.nome||"";
+  whatsapp.value=c.whatsapp||"";
+  plano.value=c.plano||"";
+  valor.value=c.valor||"";
+  inicio.value=c.data_de_inicio||"";
+  vencimento.value=c.vencimento||"";
+
+  editandoId=id;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+// PAGO
+async function pago(id){
+  let c=dadosClientes.find(x=>Number(x.id)===Number(id));
+  if(!c) return;
+
+  let nova=new Date(c.vencimento);
+  nova.setDate(nova.getDate()+30);
+
+  let formatada=nova.toISOString().split("T")[0];
+
+  await client.from("Painel ftv").update({vencimento:formatada}).eq("id",id);
+
+  carregar();
+}
+
+// EXCLUIR
+async function del(id){
+  await client.from("Painel ftv").delete().eq("id",id);
+  carregar();
+}
+
+// LIMPAR
+function limpar(){
+  nome.value="";
+  whatsapp.value="";
+  plano.value="";
+  valor.value="";
+  inicio.value="";
+  vencimento.value="";
 }
 </script>
 
