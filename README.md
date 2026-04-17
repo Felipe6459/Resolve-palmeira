@@ -79,12 +79,6 @@ canvas {
   max-height:350px;
 }
 
-@keyframes piscar {
-  0% { background:#ef4444; }
-  50% { background:#7f1d1d; }
-  100% { background:#ef4444; }
-}
-
 .delete { background:#ef4444; }
 </style>
 </head>
@@ -107,7 +101,7 @@ Painel IPTV PRO MAX
 
 <div class="container">
 
-<div id="alerta" style="display:none; padding:15px; border-radius:10px; text-align:center; margin-bottom:10px; font-weight:bold; animation: piscar 1s infinite;">
+<div id="alerta" style="display:none; padding:15px; border-radius:10px; text-align:center; margin-bottom:10px; font-weight:bold;">
 🚨 EXISTEM CLIENTES VENCIDOS!
 </div>
 
@@ -122,6 +116,11 @@ Painel IPTV PRO MAX
 </div>
 
 <canvas id="grafico"></canvas>
+
+<!-- BOTÃO NOVO -->
+<button onclick="cobrarVencidos()" style="background:#ef4444;">
+💰 Cobrar todos vencidos
+</button>
 
 <h3>Cadastro</h3>
 
@@ -140,8 +139,6 @@ Painel IPTV PRO MAX
 </div>
 </div>
 
-<audio id="alertaSom" src="https://www.soundjay.com/buttons/sounds/beep-01a.mp3"></audio>
-
 <script>
 const client = supabase.createClient(
   "https://nghgqcgsuyyytrpfvfzh.supabase.co",
@@ -154,10 +151,6 @@ const SENHA="1234";
 let dadosClientes=[];
 let editandoId=null;
 let chart;
-let tocou=false;
-
-let modoGrafico="clientes";
-let intervaloGrafico;
 
 // LOGIN
 function entrar(){
@@ -197,7 +190,7 @@ async function carregar(){
   dadosClientes = data || [];
 
   let t=0,a=0,v=0,av=0,r=0,rec=0,atr=0;
-  let planosClientes={}, planosValor={};
+  let planosClientes={};
   let html="";
 
   dadosClientes.forEach(c=>{
@@ -213,7 +206,6 @@ async function carregar(){
     if(status==="vencido") atr+=Number(c.valor||0);
 
     planosClientes[c.plano]=(planosClientes[c.plano]||0)+1;
-    planosValor[c.plano]=(planosValor[c.plano]||0)+Number(c.valor||0);
 
     html+=`
     <div class="card ${status}">
@@ -223,6 +215,7 @@ async function carregar(){
 
       <button onclick="editar(${c.id})">✏️</button>
       <button onclick="pago(${c.id})">✅</button>
+      <button onclick="whats(${c.id})">📲</button>
       <button class="delete" onclick="del(${c.id})">🗑️</button>
     </div>`;
   });
@@ -258,6 +251,51 @@ function atualizarGrafico(planosClientes){
         ]
       }]
     }
+  });
+}
+
+// WHATS INDIVIDUAL INTELIGENTE
+function whats(id){
+  let c = dadosClientes.find(x => Number(x.id) === Number(id));
+  if(!c) return;
+
+  let numero = c.whatsapp.replace(/\D/g, "");
+  let status = statusCalc(c.vencimento);
+
+  let msg = "";
+
+  if(status === "ativo"){
+    msg = `Olá ${c.nome}, tudo certo?\nSeu plano está ativo até ${c.vencimento}.`;
+  }
+
+  if(status === "aviso"){
+    msg = `Olá ${c.nome}, seu plano vence em breve (${c.vencimento}).`;
+  }
+
+  if(status === "vencido"){
+    msg = `Olá ${c.nome}, seu plano está vencido desde ${c.vencimento}.`;
+  }
+
+  let link = `https://wa.me/55${numero}?text=${encodeURIComponent(msg)}`;
+  window.open(link, "_blank");
+}
+
+// COBRAR TODOS
+function cobrarVencidos(){
+  let vencidos = dadosClientes.filter(c => statusCalc(c.vencimento) === "vencido");
+
+  if(vencidos.length === 0){
+    alert("Nenhum cliente vencido");
+    return;
+  }
+
+  vencidos.forEach((c, i) => {
+    let numero = c.whatsapp.replace(/\D/g, "");
+    let msg = `Olá ${c.nome}, seu plano está vencido.\nRegularize para continuar usando.`;
+
+    let link = `https://wa.me/55${numero}?text=${encodeURIComponent(msg)}`;
+
+    setTimeout(() => window.open(link, "_blank"), i * 800);
   });
 }
 
