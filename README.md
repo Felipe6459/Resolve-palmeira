@@ -191,7 +191,76 @@ function statusCalc(v){
   return "ativo";
 }
 
-// RESTO DO CÓDIGO (igual ao seu original)
+// PLUGIN CENTRO
+const centerTextPlugin={
+  id:'centerText',
+  beforeDraw(chart){
+    const {width,height}=chart;
+    const ctx=chart.ctx;
+
+    let total=chart.config.data.datasets[0].data.reduce((a,b)=>a+b,0);
+
+    ctx.save();
+    ctx.font="bold 20px Arial";
+    ctx.fillStyle="#fff";
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+
+    ctx.fillText(total,width/2,height/2);
+    ctx.restore();
+  }
+};
+
+// CARREGAR
+async function carregar(){
+  const { data } = await client.from("Painel ftv").select("*");
+  dadosClientes = data || [];
+
+  let planosClientes={};
+  let html="";
+
+  dadosClientes.forEach(c=>{
+    let status=statusCalc(c.vencimento);
+
+    planosClientes[c.plano]=(planosClientes[c.plano]||0)+1;
+
+    html+=`
+    <div class="card ${status}">
+      <b>${c.nome}</b>
+      <p>${c.plano} - R$ ${c.valor}</p>
+      <p>Vence: ${c.vencimento}</p>
+    </div>`;
+  });
+
+  lista.innerHTML=html;
+
+  atualizarGrafico(planosClientes);
+}
+
+// GRAFICO
+function atualizarGrafico(planosClientes){
+  let labels=Object.keys(planosClientes);
+  let dados=Object.values(planosClientes);
+
+  if(chart) chart.destroy();
+
+  chart=new Chart(document.getElementById("grafico"),{
+    type:"doughnut",
+    data:{
+      labels:labels,
+      datasets:[{
+        data:dados,
+        backgroundColor:["#3b82f6","#22c55e","#f59e0b","#ef4444"]
+      }]
+    },
+    options:{
+      plugins:{
+        legend:{ position:"bottom" }
+      }
+    },
+    plugins:[centerTextPlugin]
+  });
+}
 </script>
 
 </body>
