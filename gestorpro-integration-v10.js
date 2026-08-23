@@ -1,8 +1,7 @@
-/* GestorPro V10 — integração dos módulos complementares
-   Carrega os módulos já existentes e cria uma navegação única para eles.
-   Inclua este arquivo no index.html uma única vez. */
+/* GestorPro V10 — integração dos módulos complementares + Supabase
+   Este arquivo deve ser carregado pelo index.html uma única vez. */
 (function(){
- const modules=['client-v3-enhancement.js','servers-v4-enhancement.js','finance-v5-enhancement.js','billing-v6-enhancement.js','reports-v7-enhancement.js','backup-v8-enhancement.js','settings-v9-enhancement.js'];
+ const modules=['gestorpro-supabase.js','client-v3-enhancement.js','servers-v4-enhancement.js','finance-v5-enhancement.js','billing-v6-enhancement.js','reports-v7-enhancement.js','backup-v8-enhancement.js','settings-v9-enhancement.js'];
  function load(src){return new Promise((resolve,reject)=>{if(document.querySelector('script[src="'+src+'"]'))return resolve();const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=reject;document.body.appendChild(s)})}
  async function init(){for(const m of modules){try{await load(m)}catch(e){console.warn('GestorPro: módulo não carregado',m,e)}}
   let nav=document.getElementById('gpV10Nav');if(nav)return;
