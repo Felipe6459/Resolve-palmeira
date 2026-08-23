@@ -40,9 +40,22 @@
       const { data, error } = await c.from('profiles').select('organization_id, full_name, role, organizations(*)').eq('id', user.id).maybeSingle();
       if (error) throw error;
       return data || null;
+    },
+    async subscription() {
+      const c = await getClient();
+      const org = await this.organization();
+      if (!org?.organization_id) return null;
+      const { data, error } = await c.from('subscriptions').select('*, plans(*)').eq('organization_id', org.organization_id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (error) throw error;
+      return data || null;
+    },
+    async canAccess() {
+      const c = await getClient();
+      const { data, error } = await c.rpc('can_access_gestorpro');
+      if (error) throw error;
+      return !!data;
     }
   };
 
-  window.addEventListener('gestorpro:supabase-ready', () => {});
   getClient().then(() => window.dispatchEvent(new Event('gestorpro:supabase-ready'))).catch(err => console.error('GestorPro Supabase:', err));
 })();
