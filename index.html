@@ -5,6 +5,23 @@
 <title>GestorPro — Gestão de Clientes e Assinaturas</title>
 <style>
 :root{--p:#6d42e8;--p2:#8b5cf6;--bg:#f5f6fa;--card:#fff;--line:#e7e3ef;--text:#171522;--muted:#77718a;--ok:#16a34a;--warn:#d97706;--bad:#dc2626;--blue:#2563eb;--shadow:0 10px 30px #30205d0b}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px Inter,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}.side{position:fixed;left:0;top:0;bottom:0;width:250px;background:#fff;border-right:1px solid var(--line);padding:18px 12px;z-index:50;display:flex;flex-direction:column}.brand{font-size:20px;font-weight:900;padding:8px 12px 24px}.brand b{color:var(--p)}.label{font-size:10px;color:#9a94a9;text-transform:uppercase;letter-spacing:.12em;padding:10px 12px 5px;font-weight:800}.nav button{display:flex;gap:11px;align-items:center;width:100%;border:0;background:none;color:var(--muted);padding:11px 12px;border-radius:10px;text-align:left;font-weight:750;cursor:pointer;margin:2px 0}.nav button:hover,.nav button.on{background:#f0ebff;color:var(--p)}.ico{width:20px;text-align:center}.account{margin-top:auto;background:#f8f7fb;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;gap:9px;align-items:center}.avatar{width:36px;height:36px;border-radius:11px;background:#e9e0ff;color:var(--p);display:grid;place-items:center;font-weight:900}.account small{display:block;color:var(--muted);margin-top:2px}.main{margin-left:250px}.top{height:70px;position:sticky;top:0;z-index:40;background:#ffffffed;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 25px;backdrop-filter:blur(8px)}.left,.right,.actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.search{width:350px;background:#f8f7fb;border:1px solid var(--line);border-radius:10px;padding:9px 12px;display:flex;gap:8px}.search input{width:100%;border:0;outline:0;background:none}.content{padding:25px;max-width:1700px;margin:auto}.page{display:none}.page.on{display:block}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:15px;margin-bottom:18px}.head h1{margin:0 0 4px;font-size:25px}.muted{color:var(--muted)}.btn{border:1px solid var(--line);background:#fff;color:var(--text);padding:9px 12px;border-radius:9px;cursor:pointer;font-weight:750}.btn:hover{border-color:#c7b7f3}.primary{background:var(--p);color:#fff;border-color:var(--p)}.soft{background:#f0ebff;color:var(--p)}.danger{color:var(--bad)}.small{padding:6px 8px;font-size:12px}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.stat,.card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}.stat{padding:16px}.stat .sl{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}.stat b{display:block;font-size:25px;margin-top:10px}.stat small{display:block;color:var(--muted);margin-top:5px}.green{color:var(--ok)}.orange{color:var(--warn)}.red{color:var(--bad)}.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:13px;margin-top:13px}.card{padding:18px}.card h3{margin:0 0 14px}.table{overflow:auto;border:1px solid var(--line);border-radius:11px;background:#fff}table{border-collapse:collapse;width:100%;min-width:1100px}th,td{text-align:left;padding:11px;border-bottom:1px solid var(--line)}th{font-size:10px;color:var(--muted);text-transform:uppercase;background:#faf9fc;white-space:nowrap}tr:last-child td{border-bottom:0}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.toolbar input,.toolbar select,.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:9px;background:#fff;padding:10px;outline:0;color:var(--text)}.toolbar input{width:min(400px,100%)}.badge{display:inline-block;border-radius:99px;padding:4px 8px;font-size:10px;font-weight:850}.bgreen{background:#e9f8ee;color:#15803d}.byellow{background:#fff5d8;color:#a16207}.bred{background:#feecec;color:#b91c1c}.bblue{background:#eaf2ff;color:#1d4ed8}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.server-title{display:flex;justify-content:space-between;gap:10px}.server-title h3{margin:0}.big{font-size:28px;font-weight:900;margin:13px 0 3px}.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}.mini div{background:#f8f7fb;padding:9px;border-radius:9px}.mini b{display:block;font-size:15px}.mini small{color:var(--muted);font-size:10px}.bar{height:7px;background:#eceaf1;border-radius:10px;overflow:hidden;margin:9px 0}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--p),var(--p2))}.row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.metricgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}.metric{background:#f8f7fb;border-radius:10px;padding:13px}.metric b{display:block;font-size:19px}.metric small{color:var(--muted)}.notice{padding:11px;border-radius:10px;background:#fff8e4;border:1px solid #f0dda6;color:#795300;margin-bottom:13px;font-size:12px}.modal{position:fixed;inset:0;background:#130d1d88;z-index:100;display:none;align-items:center;justify-content:center;padding:14px}.modal.open{display:flex}.box{width:min(980px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:16px;padding:20px}.modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.modalhead h2{margin:0}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:11px;color:var(--muted);font-weight:800}.full{grid-column:1/-1}.foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.history{padding:10px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}.empty{padding:18px;color:var(--muted);text-align:center}.mobile{display:none}.toast{position:fixed;right:18px;bottom:18px;background:#191522;color:#fff;padding:12px 15px;border-radius:10px;z-index:200;display:none}.toast.show{display:block}.profile{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kv{background:#f8f7fb;padding:11px;border-radius:9px}.kv small{display:block;color:var(--muted);font-size:10px}.kv b{display:block;margin-top:3px}.timeline{border-left:2px solid #ddd0ff;padding-left:15px}.timeline .event{padding:0 0 14px;position:relative}.timeline .event:before{content:"";position:absolute;left:-21px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--p)}.closemonth{background:linear-gradient(135deg,#7048e8,#9b6cff);color:#fff}.hidden{display:none!important}@media(max-width:1150px){.stats{grid-template-columns:repeat(3,1fr)}.cards{grid-template-columns:repeat(2,1fr)}.side{width:78px}.brand{font-size:0;text-align:center}.brand b{font-size:18px}.label,.nav span,.account>div:last-child{display:none}.nav button{justify-content:center}.main{margin-left:78px}}@media(max-width:700px){.side{display:none;width:270px;box-shadow:15px 0 35px #0004}.side.open{display:flex}.main{margin-left:0}.mobile{display:block}.top{padding:0 12px}.search{width:44px}.search input{display:none}.right .hideMobile{display:none}.content{padding:14px}.stats,.cards,.metricgrid,.grid2,.form,.profile{grid-template-columns:1fr}.head{flex-direction:column;align-items:flex-start}.full{grid-column:auto}}
+
+/* GESTORPRO_UI_V2 */
+.gp-v2 .stat{position:relative;overflow:hidden;border:1px solid #e8e2f5;transition:.2s;min-height:128px}
+.gp-v2 .stat:hover{transform:translateY(-2px);box-shadow:0 16px 35px #3b216b16}
+.gp-v2 .stat:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-30px;top:-35px;background:linear-gradient(135deg,#7c52ee22,#a78bfa05)}
+.gp-v2 .stat:nth-child(4){background:linear-gradient(135deg,#fff,#f5f0ff)}
+.gp-v2 .stat:nth-child(5){background:linear-gradient(135deg,#6d42e8,#8b5cf6);color:#fff;border-color:#6d42e8}
+.gp-v2 .stat:nth-child(5) .sl,.gp-v2 .stat:nth-child(5) small{color:#eee8ff}
+.gp-v2 .stat:nth-child(5) b{color:#fff}
+.gp-v2 .card{box-shadow:0 8px 28px #30205d0a}
+.gp-v2 .head h1{font-size:28px;letter-spacing:-.02em}
+.gp-v2 .gp-welcome{display:flex;justify-content:space-between;gap:18px;align-items:center;background:linear-gradient(135deg,#1d1530,#6d42e8);color:#fff;border-radius:18px;padding:20px 22px;margin-bottom:15px;box-shadow:0 14px 35px #3b216b20}
+.gp-v2 .gp-welcome h2{margin:0 0 5px;font-size:20px}.gp-v2 .gp-welcome p{margin:0;color:#e9e2ff}.gp-v2 .gp-welcome .gp-date{font-size:12px;background:#ffffff18;border:1px solid #ffffff22;padding:9px 11px;border-radius:10px;white-space:nowrap}
+.gp-v2 .gp-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:13px 0}.gp-v2 .gp-action{border:1px solid #e7e0f4;background:#fff;border-radius:12px;padding:13px;text-align:left;cursor:pointer;font-weight:800;color:#30264a;transition:.2s}.gp-v2 .gp-action:hover{border-color:#c7b7f3;transform:translateY(-1px);box-shadow:0 10px 22px #3b216b12}.gp-v2 .gp-action span{display:block;font-size:18px;margin-bottom:7px}.gp-v2 .gp-section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.gp-v2 .gp-section-title h3{margin:0}.gp-v2 .gp-section-title small{color:#8b849b}
+@media(max-width:900px){.gp-v2 .gp-actions{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.gp-v2 .gp-welcome{align-items:flex-start;flex-direction:column}.gp-v2 .gp-welcome .gp-date{width:100%}.gp-v2 .gp-actions{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
@@ -83,5 +100,33 @@ function attr(v){return String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
 window.addEventListener('load',()=>{let now=new Date(),first=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);document.getElementById('finFrom').value=first;document.getElementById('finTo').value=today();renderAll()});
 </script>
+
+<script>
+/* GESTORPRO_UI_V2 */
+(() => {
+  const dash = document.getElementById('dash');
+  if (!dash) return;
+  dash.classList.add('gp-v2');
+  const head = dash.querySelector('.head');
+  if (head && !dash.querySelector('.gp-welcome')) {
+    const w = document.createElement('div');
+    w.className = 'gp-welcome';
+    const d = new Date();
+    const date = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+    w.innerHTML = '<div><h2>Bem-vindo ao GestorPro 👋</h2><p>Tenha uma visão rápida dos seus clientes, servidores e resultados.</p></div><div class="gp-date">'+date+'</div>';
+    head.parentNode.insertBefore(w, head);
+  }
+  if (!dash.querySelector('.gp-actions')) {
+    const a = document.createElement('div'); a.className='gp-actions';
+    a.innerHTML = '<button class="gp-action" onclick="clientModal()"><span>👤</span>Novo cliente<small> Cadastrar assinatura</small></button>' +
+      '<button class="gp-action" onclick="serverModal()"><span>🖥️</span>Novo servidor<small> Adicionar fornecedor</small></button>' +
+      '<button class="gp-action" onclick="go(\'credits\')"><span>🎟️</span>Comprar créditos<small> Repor estoque</small></button>' +
+      '<button class="gp-action" onclick="go(\'dues\')"><span>🔔</span>Ver cobranças<small> Acompanhar vencimentos</small></button>';
+    const stats = dash.querySelector('.stats');
+    if (stats) stats.parentNode.insertBefore(a, stats);
+  }
+})();
+</script>
+
 </body>
 </html>
