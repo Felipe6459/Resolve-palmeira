@@ -28,7 +28,6 @@ jobs:
           if marker in s:
               print('GestorPro UI v2 já aplicada.')
               raise SystemExit(0)
-
           css = r'''
           /* GESTORPRO_UI_V2 */
           .gp-v2 .stat{position:relative;overflow:hidden;border:1px solid #e8e2f5;transition:.2s;min-height:128px}
@@ -42,11 +41,10 @@ jobs:
           .gp-v2 .head h1{font-size:28px;letter-spacing:-.02em}
           .gp-v2 .gp-welcome{display:flex;justify-content:space-between;gap:18px;align-items:center;background:linear-gradient(135deg,#1d1530,#6d42e8);color:#fff;border-radius:18px;padding:20px 22px;margin-bottom:15px;box-shadow:0 14px 35px #3b216b20}
           .gp-v2 .gp-welcome h2{margin:0 0 5px;font-size:20px}.gp-v2 .gp-welcome p{margin:0;color:#e9e2ff}.gp-v2 .gp-welcome .gp-date{font-size:12px;background:#ffffff18;border:1px solid #ffffff22;padding:9px 11px;border-radius:10px;white-space:nowrap}
-          .gp-v2 .gp-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:13px 0}.gp-v2 .gp-action{border:1px solid #e7e0f4;background:#fff;border-radius:12px;padding:13px;text-align:left;cursor:pointer;font-weight:800;color:#30264a;transition:.2s}.gp-v2 .gp-action:hover{border-color:#c7b7f3;transform:translateY(-1px);box-shadow:0 10px 22px #3b216b12}.gp-v2 .gp-action span{display:block;font-size:18px;margin-bottom:7px}.gp-v2 .gp-section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.gp-v2 .gp-section-title h3{margin:0}.gp-v2 .gp-section-title small{color:#8b849b}
+          .gp-v2 .gp-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:13px 0}.gp-v2 .gp-action{border:1px solid #e7e0f4;background:#fff;border-radius:12px;padding:13px;text-align:left;cursor:pointer;font-weight:800;color:#30264a;transition:.2s}.gp-v2 .gp-action:hover{border-color:#c7b7f3;transform:translateY(-1px);box-shadow:0 10px 22px #3b216b12}.gp-v2 .gp-action span{display:block;font-size:18px;margin-bottom:7px}
           @media(max-width:900px){.gp-v2 .gp-actions{grid-template-columns:repeat(2,1fr)}}
           @media(max-width:600px){.gp-v2 .gp-welcome{align-items:flex-start;flex-direction:column}.gp-v2 .gp-welcome .gp-date{width:100%}.gp-v2 .gp-actions{grid-template-columns:1fr 1fr}}
           '''
-
           js = r'''
           <script>
           /* GESTORPRO_UI_V2 */
@@ -56,28 +54,20 @@ jobs:
             dash.classList.add('gp-v2');
             const head = dash.querySelector('.head');
             if (head && !dash.querySelector('.gp-welcome')) {
-              const w = document.createElement('div');
-              w.className = 'gp-welcome';
-              const d = new Date();
-              const date = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+              const w = document.createElement('div'); w.className = 'gp-welcome';
+              const d = new Date(); const date = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
               w.innerHTML = '<div><h2>Bem-vindo ao GestorPro 👋</h2><p>Tenha uma visão rápida dos seus clientes, servidores e resultados.</p></div><div class="gp-date">'+date+'</div>';
               head.parentNode.insertBefore(w, head);
             }
             if (!dash.querySelector('.gp-actions')) {
               const a = document.createElement('div'); a.className='gp-actions';
-              a.innerHTML = '<button class="gp-action" onclick="clientModal()"><span>👤</span>Novo cliente<small> Cadastrar assinatura</small></button>' +
-                '<button class="gp-action" onclick="serverModal()"><span>🖥️</span>Novo servidor<small> Adicionar fornecedor</small></button>' +
-                '<button class="gp-action" onclick="go(\'credits\')"><span>🎟️</span>Comprar créditos<small> Repor estoque</small></button>' +
-                '<button class="gp-action" onclick="go(\'dues\')"><span>🔔</span>Ver cobranças<small> Acompanhar vencimentos</small></button>';
-              const stats = dash.querySelector('.stats');
-              if (stats) stats.parentNode.insertBefore(a, stats);
+              a.innerHTML = '<button class="gp-action" onclick="clientModal()"><span>👤</span>Novo cliente<small> Cadastrar assinatura</small></button>' + '<button class="gp-action" onclick="serverModal()"><span>🖥️</span>Novo servidor<small> Adicionar fornecedor</small></button>' + '<button class="gp-action" onclick="go(\'credits\')"><span>🎟️</span>Comprar créditos<small> Repor estoque</small></button>' + '<button class="gp-action" onclick="go(\'dues\')"><span>🔔</span>Ver cobranças<small> Acompanhar vencimentos</small></button>';
+              const stats = dash.querySelector('.stats'); if (stats) stats.parentNode.insertBefore(a, stats);
             }
           })();
           </script>
           '''
-
-          if '</style>' not in s or '</body>' not in s:
-              raise SystemExit('Estrutura HTML inesperada: atualização cancelada.')
+          if '</style>' not in s or '</body>' not in s: raise SystemExit('Estrutura HTML inesperada: atualização cancelada.')
           s = s.replace('</style>', css + '\n</style>', 1)
           s = s.replace('</body>', js + '\n</body>', 1)
           p.write_text(s, encoding='utf-8')
