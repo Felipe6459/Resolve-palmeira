@@ -1,0 +1,44 @@
+name: Aplicar identidade GestorPro
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rebrand:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Atualizar marca e dashboard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('<title>Resolve Palmeira — Gestão</title>', '<title>GestorPro — Gestão de Clientes e Assinaturas</title>')
+          s = s.replace('<div class="brand">Resolve <b>Palmeira</b></div>', '<div class="brand"><span style="display:inline-grid;place-items:center;width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#6d42e8,#8b5cf6);color:#fff;margin-right:7px;font-size:16px">GP</span><b>GestorPro</b></div>')
+          s = s.replace('<div class="avatar">RP</div>', '<div class="avatar">GP</div>')
+          s = s.replace('Protótipo local', 'GestorPro • Administração')
+          s = s.replace('Resolve <b>Palmeira</b>', '<b>GestorPro</b>')
+          s = s.replace('Clientes, vencimentos, estoque e lucro em um só lugar.', 'Gestão inteligente de clientes, assinaturas, estoque e lucro.')
+          s = s.replace('<div class="stats"><div class="stat"><div class="sl">Clientes', '<div class="stats"><div class="stat"><div class="sl">Clientes')
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit da identidade
+        run: |
+          git config user.name "GestorPro Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração necessária"
+          else
+            git commit -m "feat: rebrand para GestorPro"
+            git push
+          fi
