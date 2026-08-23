@@ -1,0 +1,75 @@
+name: Integrar módulos GestorPro
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'client-v3-enhancement.js'
+      - 'servers-v4-enhancement.js'
+      - 'finance-v5-enhancement.js'
+      - 'billing-v6-enhancement.js'
+      - 'reports-v7-enhancement.js'
+      - 'backup-v8-enhancement.js'
+      - 'settings-v9-enhancement.js'
+      - 'gestorpro-integration-v10.js'
+      - '.github/workflows/integrate-gestorpro-modules.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Integrar scripts no index.html
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          files = [
+              'client-v3-enhancement.js',
+              'servers-v4-enhancement.js',
+              'finance-v5-enhancement.js',
+              'billing-v6-enhancement.js',
+              'reports-v7-enhancement.js',
+              'backup-v8-enhancement.js',
+              'settings-v9-enhancement.js',
+              'gestorpro-integration-v10.js',
+          ]
+          marker = '<!-- GESTORPRO_MODULES -->'
+          block = marker + '\n' + '\n'.join(f'<script src="{f}"></script>' for f in files) + '\n'
+          if marker not in text:
+              if '</body>' in text:
+                  text = text.replace('</body>', block + '</body>', 1)
+              elif '</html>' in text:
+                  text = text.replace('</html>', block + '</html>', 1)
+              else:
+                  text += '\n' + block
+          else:
+              start = text.index(marker)
+              end = text.find('</script>', start)
+              # Rebuild the marked section safely, regardless of prior contents.
+              next_body = text.find('</body>', start)
+              if next_body == -1:
+                  next_body = text.find('</html>', start)
+              old = text[start:next_body]
+              text = text[:start] + block + text[next_body:]
+          p.write_text(text, encoding='utf-8')
+
+      - name: Commitar integração
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then
+            echo 'Nenhuma alteração necessária.'
+          else
+            git commit -m 'feat: integrar módulos do GestorPro ao painel principal'
+            git push
+          fi
