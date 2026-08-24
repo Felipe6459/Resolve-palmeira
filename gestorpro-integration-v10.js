@@ -1,6 +1,6 @@
-/* GestorPro V17 — integração, autenticação e persistência Supabase */
+/* GestorPro V18 — integração, autenticação e persistência Supabase */
 (function(){
- const modules=['gestorpro-supabase.js?v=20260824-v17','client-v3-enhancement.js','servers-v4-enhancement.js','finance-v5-enhancement.js','billing-v6-enhancement.js','reports-v7-enhancement.js','backup-v8-enhancement.js','settings-v9-enhancement.js','gestorpro-persistence-v14.js?v=20260824-v17','master-v14-enhancement.js'];
+ const modules=['gestorpro-supabase.js?v=20260824-v18','client-v3-enhancement.js','servers-v4-enhancement.js','finance-v5-enhancement.js','billing-v6-enhancement.js','reports-v7-enhancement.js','backup-v8-enhancement.js','settings-v9-enhancement.js','gestorpro-persistence-v14.js?v=20260824-v18','master-v14-enhancement.js'];
  function load(src){return new Promise((resolve,reject)=>{if(document.querySelector('script[src="'+src+'"]'))return resolve();const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=reject;document.body.appendChild(s)})}
  function authUI(){
   if(document.getElementById('gpAuth')) return;
