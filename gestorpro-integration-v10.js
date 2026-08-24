@@ -1,6 +1,6 @@
 /* GestorPro V16 — integração, autenticação, persistência e controle de assinatura */
 (function(){
- const modules=['gestorpro-supabase.js','client-v3-enhancement.js','servers-v4-enhancement.js','finance-v5-enhancement.js','billing-v6-enhancement.js','reports-v7-enhancement.js','backup-v8-enhancement.js','settings-v9-enhancement.js','gestorpro-persistence-v14.js','master-v14-enhancement.js'];
+ const modules=['gestorpro-supabase.js','client-v3-enhancement.js','servers-v4-enhancement.js','finance-v5-enhancement.js','billing-v6-enhancement.js','reports-v7-enhancement.js','backup-v8-enhancement.js','settings-v9-enhancement.js','gestorpro-persistence-v14.js?v=20260824-fix1','master-v14-enhancement.js'];
  function load(src){return new Promise((resolve,reject)=>{if(document.querySelector('script[src="'+src+'"]'))return resolve();const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=reject;document.body.appendChild(s)})}
  function authUI(){
   if(document.getElementById('gpAuth')) return;
