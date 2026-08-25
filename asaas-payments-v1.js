@@ -1,16 +1,15 @@
 /* GestorPro — Asaas Pix V1 */
 (function(){
- const fn=()=>window.GestorProSupabase?.client;
  async function call(action,payload={}){
-  const c=await fn();
-  if(!c) throw new Error('Supabase não inicializado.');
-  const {data:{session}}=await c.auth.getSession();
-  if(!session)throw new Error('Sessão expirada.');
-  const base=window.GestorProSupabase?.url;
+  const bridge=window.GestorProSupabase;
+  if(!bridge||typeof bridge.session!=='function')throw new Error('Supabase não inicializado. Recarregue a página.');
+  const session=await bridge.session();
+  if(!session?.access_token)throw new Error('Sessão expirada. Faça login novamente.');
+  const base=bridge.url;
   if(!base)throw new Error('URL do Supabase não configurada.');
   const r=await fetch(base+'/functions/v1/asaas-admin',{
    method:'POST',
-   headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+   headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':window.GestorProSupabaseKey||''},
    body:JSON.stringify({action,...payload})
   });
   const j=await r.json().catch(()=>({}));
