@@ -9,6 +9,62 @@
     });
   }
 
+  // Carrega a integração Asaas na página principal.
+  const loadAsaas = () => new Promise((resolve, reject) => {
+    if (window.gpAsaasSettings) return resolve();
+    const s = document.createElement('script');
+    s.src = `${BASE}asaas-payments-v1.js?v=fix2`;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+
+  function addAsaasButton() {
+    if (!window.gpAsaasSettings) return;
+    const nav = document.querySelector('.nav');
+    if (!nav || document.getElementById('gpAsaasNavButton')) return;
+
+    const button = document.createElement('button');
+    button.id = 'gpAsaasNavButton';
+    button.type = 'button';
+    button.innerHTML = '💳 <span>Asaas</span>';
+    button.title = 'Configurar pagamentos Asaas';
+    button.onclick = () => window.gpAsaasSettings();
+
+    // Fica junto das opções de Controle/Configurações.
+    const settings = Array.from(nav.querySelectorAll('button')).find(b => /Configurações/i.test(b.textContent));
+    if (settings) nav.insertBefore(button, settings);
+    else nav.appendChild(button);
+  }
+
+  async function initAsaasUI() {
+    try {
+      await loadAsaas();
+      // A interface principal usa sessão do Supabase; aguardamos um instante
+      // para garantir que o bridge esteja disponível.
+      if (window.GestorProSupabase) {
+        try {
+          const org = await window.GestorProSupabase.organization();
+          const role = String(org?.role || '').toLowerCase();
+          if (role === 'master' || role === 'owner' || role === 'admin') addAsaasButton();
+        } catch (e) {
+          console.warn('GestorPro Asaas: não foi possível verificar o perfil.', e);
+        }
+      }
+      // Fallback: se a sessão/perfil carregar depois, tenta novamente.
+      setTimeout(addAsaasButton, 1000);
+      setTimeout(addAsaasButton, 3000);
+    } catch (e) {
+      console.error('GestorPro Asaas: falha ao carregar integração', e);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAsaasUI, { once: true });
+  } else {
+    initAsaasUI();
+  }
+
   let deferredPrompt = null;
 
   window.addEventListener('beforeinstallprompt', event => {
