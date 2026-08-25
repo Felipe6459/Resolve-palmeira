@@ -2,7 +2,7 @@
 (function(){
  const fn=()=>window.GestorProSupabase?.client;
  async function call(action,payload={}){
-  const c=fn();
+  const c=await fn();
   if(!c) throw new Error('Supabase não inicializado.');
   const {data:{session}}=await c.auth.getSession();
   if(!session)throw new Error('Sessão expirada.');
