@@ -1,0 +1,44 @@
+name: GestorPro PWA setup
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  setup-pwa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject PWA into index.html
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          marker = '<!-- GESTORPRO_PWA -->'
+          if marker not in text:
+              injection = '''\n<!-- GESTORPRO_PWA -->\n<link rel="manifest" href="./manifest.json">\n<meta name="theme-color" content="#6d42e8">\n<meta name="mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-status-bar-style" content="default">\n<meta name="apple-mobile-web-app-title" content="GestorPro">\n<script src="./pwa-init.js" defer></script>\n<!-- /GESTORPRO_PWA -->\n'''
+              if '</head>' not in text:
+                  raise SystemExit('Não foi encontrado </head> em index.html')
+              text = text.replace('</head>', injection + '</head>', 1)
+              p.write_text(text, encoding='utf-8')
+          else:
+              print('PWA já está presente em index.html')
+          PY
+
+      - name: Commit PWA changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração necessária."
+          else
+            git commit -m "feat: enable GestorPro PWA"
+            git push
+          fi
