@@ -23,6 +23,16 @@
 @media(max-width:600px){.gp-v2 .gp-welcome{align-items:flex-start;flex-direction:column}.gp-v2 .gp-welcome .gp-date{width:100%}.gp-v2 .gp-actions{grid-template-columns:1fr 1fr}}
 
 </style>
+
+<!-- GESTORPRO_PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#6d42e8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="GestorPro">
+<script src="./pwa-init.js" defer></script>
+<!-- /GESTORPRO_PWA -->
 </head>
 <body>
 <aside id="side" class="side"><div class="brand"><span style="display:inline-grid;place-items:center;width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#6d42e8,#8b5cf6);color:#fff;margin-right:7px;font-size:16px">GP</span><b>GestorPro</b></div><div class="label">Principal</div><nav class="nav"><button class="on" onclick="go('dash',this)">⌂ <span>Dashboard</span></button><button onclick="go('clients',this)">♙ <span>Clientes</span></button><button onclick="go('servers',this)">▣ <span>Servidores</span></button><button onclick="go('finance',this)">◈ <span>Financeiro</span></button><div class="label">Controle</div><button onclick="go('credits',this)">◆ <span>Créditos</span></button><button onclick="go('dues',this)">◷ <span>Cobranças</span></button><button onclick="go('reports',this)">▥ <span>Relatórios</span></button><button onclick="go('settings',this)">⚙ <span>Configurações</span></button></nav><div class="account"><div class="avatar">GP</div><div><b>Administrador</b><small>GestorPro • Administração</small></div></div></aside>
