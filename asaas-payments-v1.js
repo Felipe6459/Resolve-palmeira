@@ -1,7 +1,22 @@
 /* GestorPro — Asaas Pix V1 */
 (function(){
  const fn=()=>window.GestorProSupabase?.client;
- async function call(action,payload={}){const c=await fn()();const {data:{session}}=await c.auth.getSession();if(!session)throw new Error('Sessão expirada.');const r=await fetch(window.GestorProSupabase.url+'/functions/v1/asaas-admin',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({action,...payload})});const j=await r.json().catch(()=>({}));if(!r.ok||j.error)throw new Error(j.error||'Erro na integração Asaas.');return j}
+ async function call(action,payload={}){
+  const c=fn();
+  if(!c) throw new Error('Supabase não inicializado.');
+  const {data:{session}}=await c.auth.getSession();
+  if(!session)throw new Error('Sessão expirada.');
+  const base=window.GestorProSupabase?.url;
+  if(!base)throw new Error('URL do Supabase não configurada.');
+  const r=await fetch(base+'/functions/v1/asaas-admin',{
+   method:'POST',
+   headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+   body:JSON.stringify({action,...payload})
+  });
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||j.error)throw new Error(j.error||'Erro na integração Asaas.');
+  return j
+ }
  window.gpAsaasStatus=async()=>call('status');
  window.gpAsaasSaveKey=async(key,environment)=>call('save_key',{apiKey:key,environment});
  window.gpAsaasPay=async(cpfCnpj,mobilePhone)=>call('create_pix',{cpfCnpj,mobilePhone});
