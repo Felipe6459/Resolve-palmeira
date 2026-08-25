@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gestorpro-v1';
+const CACHE_NAME = 'gestorpro-v2';
 const APP_SHELL = [
   '/Resolve-palmeira/',
   '/Resolve-palmeira/index.html',
