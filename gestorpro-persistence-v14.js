@@ -24,7 +24,16 @@
     window.gpDeleteServer=deleteServer;
     console.log('[GestorPro] V22 persistência direta instalada');return true;
   }
-  async function hydrate(){if(hydrated)return true;try{const remote=await loadRemote();if(remote)assignD(remote);hydrated=true;install();render();try{localStorage.removeItem('resolve_palmeira_v6')}catch(e){}console.log('[GestorPro] dados carregados do Supabase');return true}catch(e){console.error('[GestorPro] falha ao carregar Supabase',e);toast('Erro ao carregar dados do banco');return false}}
+  async function hydrate(){if(hydrated)return true;try{
+    const remote=await loadRemote();
+    const current=realD()||{};
+    const incoming=remote&&typeof remote==='object'?remote:{};
+    const merged={...current,...incoming};
+    if(!Array.isArray(incoming.clients))merged.clients=Array.isArray(current.clients)?current.clients:[];
+    if(!Array.isArray(incoming.servers))merged.servers=Array.isArray(current.servers)?current.servers:[];
+    assignD(merged);
+    hydrated=true;install();render();try{localStorage.removeItem('resolve_palmeira_v6')}catch(e){}console.log('[GestorPro] dados carregados do Supabase');return true
+  }catch(e){console.error('[GestorPro] falha ao carregar Supabase',e);toast('Erro ao carregar dados do banco');return false}}
   window.GestorProPersistence={load:hydrate,save:persist,editServer,deleteServer};
   window.addEventListener('gestorpro:auth-ready',hydrate);
   window.addEventListener('gestorpro:supabase-ready',install);
