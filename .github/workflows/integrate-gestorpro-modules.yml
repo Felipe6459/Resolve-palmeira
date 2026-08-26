@@ -58,9 +58,16 @@ jobs:
               next_body = text.find('</body>', start)
               if next_body == -1:
                   next_body = text.find('</html>', start)
-              old = text[start:next_body]
+              if next_body == -1:
+                  next_body = len(text)
               text = text[:start] + block + text[next_body:]
           p.write_text(text, encoding='utf-8')
+
+          # Falhar o job se a persistência não tiver sido realmente inserida.
+          final = p.read_text(encoding='utf-8')
+          required = '<script src="gestorpro-persistence-v14.js"></script>'
+          if required not in final:
+              raise SystemExit('ERRO: gestorpro-persistence-v14.js não foi integrado ao index.html')
 
       - name: Commitar integração
         run: |
