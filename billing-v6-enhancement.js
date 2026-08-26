@@ -9,7 +9,8 @@
  window.gpBilling=function(filter='hoje'){
   let m=document.getElementById('gpBillingV6');if(!m){m=document.createElement('div');m.id='gpBillingV6';m.className='modal';document.body.appendChild(m)}
   const cs=list().filter(c=>filter==='todos'||group(c)===filter);
-  const buttons=['todos','hoje','3dias','7dias','vencido'].map(k=>'<button class="btn '+(filter===k?'primary':'')+'" onclick="gpBilling(\''+k+'\')">'+({todos:'Todos',hoje:'Hoje','3dias:'Até 3 dias','7dias:'Até 7 dias',vencido:'Vencidos'}[k])+'</button>').join('');
+  const labels={todos:'Todos',hoje:'Hoje','3dias':'Até 3 dias','7dias':'Até 7 dias',vencido:'Vencidos'};
+  const buttons=['todos','hoje','3dias','7dias','vencido'].map(k=>'<button class="btn '+(filter===k?'primary':'')+'" onclick="gpBilling(\''+k+'\')">'+labels[k]+'</button>').join('');
   const rows=cs.map(c=>{const d=days(c);const phone=String(c.whatsapp||c.phone||'').replace(/\D/g,'');const name=c.name||c.nome||'Cliente';const due=c.due||c.vencimento||'-';const msg=encodeURIComponent(message(c));return '<div class="gp-bill-row"><div><b>'+esc(name)+'</b><small>'+esc(c.plan||c.plano||'')+' · Vencimento: '+esc(due)+'</small></div><strong class="'+(d<0?'red':'')+'">'+(d===null?'—':d<0?Math.abs(d)+' dias atrasado':d===0?'vence hoje':'vence em '+d+' dias')+'</strong><a class="btn soft" target="_blank" href="https://wa.me/'+phone+'?text='+msg+'">📱 WhatsApp</a></div>'}).join('')||'<div class="gp-empty">Nenhum cliente nesta categoria.</div>';
   m.innerHTML='<div class="box gp-bill-box"><div class="modalhead"><h2>🔔 Central de Cobranças</h2><button class="btn" onclick="this.closest(\'.modal\').classList.remove(\'open\')">✕</button></div><div class="gp-bill-filters">'+buttons+'</div><div class="gp-bill-list">'+rows+'</div></div>';m.classList.add('open');
  };
