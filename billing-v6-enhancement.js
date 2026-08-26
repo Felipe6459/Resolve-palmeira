@@ -5,7 +5,8 @@
  const list=()=>db().clients||db().clientes||window.clients||[];
  function days(c){const raw=c.due||c.vencimento||c.expiration||c.expiresAt;if(!raw)return null;const t=new Date(raw+'T23:59:59');return Math.ceil((t-Date.now())/86400000)}
  function group(c){const d=days(c);if(d===null)return 'sem-data';if(d<0)return 'vencido';if(d===0)return 'hoje';if(d<=3)return '3dias';if(d<=7)return '7dias';return 'futuro'}
- function message(c){const name=c.name||c.nome||'Cliente';const due=c.due||c.vencimento||'-';let text='Olá '+name+', tudo bem? Passando para avisar sobre o vencimento da sua assinatura ('+due+').';if(c.include_payment_link_in_messages&&c.payment_link){text+='\n\nPara renovar seu plano, clique no link abaixo:\n'+c.payment_link+'\n\nPor favor, nos envie o comprovante de pagamento assim que possível.'}return text}
+ function paymentLink(c){const enabled=c?.include_payment_link_in_messages===true||String(c?.include_payment_link_in_messages??'').trim().toLowerCase()==='true'||String(c?.include_payment_link_in_messages??'').trim()==='1';const link=String(c?.payment_link??'').trim();return enabled&&link?link:''}
+ function message(c){const name=c.name||c.nome||'Cliente';const due=c.due||c.vencimento||'-';let text='Olá '+name+', tudo bem? Passando para avisar sobre o vencimento da sua assinatura ('+due+').';const link=paymentLink(c);if(link){text+='\n\nPara renovar seu plano, clique no link abaixo:\n'+link+'\n\nPor favor, nos envie o comprovante de pagamento assim que possível.'}return text}
  window.gpBilling=function(filter='hoje'){
   let m=document.getElementById('gpBillingV6');if(!m){m=document.createElement('div');m.id='gpBillingV6';m.className='modal';document.body.appendChild(m)}
   const cs=list().filter(c=>filter==='todos'||group(c)===filter);
