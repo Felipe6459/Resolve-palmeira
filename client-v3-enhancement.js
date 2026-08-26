@@ -20,5 +20,43 @@
       '<div class="foot"><button class="btn" onclick="document.getElementById(\'gpClientV3\').classList.remove(\'open\');clientModal&&clientModal('+JSON.stringify(c.id)+')">✏️ Editar</button><button class="btn primary" onclick="document.getElementById(\'gpClientV3\').classList.remove(\'open\');renewClient&&renewClient('+JSON.stringify(c.id)+')">🔄 Renovar</button><button class="btn soft" onclick="document.getElementById(\'gpClientV3\').classList.remove(\'open\');migrateClient&&migrateClient('+JSON.stringify(c.id)+')">🖥️ Migrar</button></div></div>';
     modal.classList.add('open');
   };
-  const style=document.createElement('style'); style.textContent='.gp-v3-box{width:min(760px,100%)}.gp-v3-box .kv{min-height:58px}.gp-v3-box .foot{flex-wrap:wrap}.gp-v3-actions{display:flex;gap:5px;flex-wrap:wrap}.gp-v3-actions .btn{padding:6px 8px;font-size:12px}'; document.head.appendChild(style);
+
+  function getClients(){const d=window.D||window.db||{};return Array.isArray(d.clients)?d.clients:(window.clients||[])}
+  function openClientModal(){return document.querySelector('.modal.open:not(#gpClientV3)')||document.querySelector('.modal:not(#gpClientV3)')}
+  function injectPaymentFields(){
+    const modal=openClientModal(); if(!modal)return;
+    const box=modal.querySelector('.box'); if(!box)return;
+    if(box.querySelector('#gpPaymentLink'))return;
+    const form=box.querySelector('form');
+    const fields=document.createElement('div'); fields.className='gp-payment-fields';
+    fields.innerHTML='<div class="field full"><label>🔗 Link de pagamento do cliente</label><input id="gpPaymentLink" type="url" placeholder="https://seu-servidor.com/#/checkout/..." autocomplete="off"><small class="muted">Cole aqui o link específico da conta desse cliente.</small></div><div class="field full"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input id="gpIncludePaymentLink" type="checkbox" style="width:auto"> Incluir este link nas mensagens automáticas do cliente</label></div>';
+    const target=form||box;
+    const anchor=target.querySelector('.foot')||target.lastElementChild;
+    if(anchor)target.insertBefore(fields,anchor);else target.appendChild(fields);
+    const c=window.__gpEditingClient;
+    if(c){document.getElementById('gpPaymentLink').value=c.payment_link||c.paymentLink||'';document.getElementById('gpIncludePaymentLink').checked=!!(c.include_payment_link_in_messages??c.includePaymentLinkInMessages)}
+  }
+  function patchClientModal(){
+    if(typeof window.clientModal!=='function'||window.__gpClientPaymentPatched)return false;
+    const originalModal=window.clientModal;
+    window.clientModal=function(id){window.__gpEditingClient=id?findClient(id):null;const r=originalModal.apply(this,arguments);setTimeout(injectPaymentFields,0);setTimeout(injectPaymentFields,120);return r};
+    if(typeof window.saveClient==='function'){
+      const originalSave=window.saveClient;
+      window.saveClient=async function(e){
+        const before=getClients().map(x=>String(x.id));
+        const link=document.getElementById('gpPaymentLink')?.value?.trim()||'';
+        const include=!!document.getElementById('gpIncludePaymentLink')?.checked;
+        const result=await originalSave.apply(this,arguments);
+        const list=getClients();
+        let c=window.__gpEditingClient&&findClient(window.__gpEditingClient.id);
+        if(!c)c=list.find(x=>!before.includes(String(x.id)))||list[list.length-1];
+        if(c){c.payment_link=link;c.include_payment_link_in_messages=include;if(window.GestorProPersistence?.save)try{await window.GestorProPersistence.save()}catch(err){console.error('[GestorPro] payment link persist',err)}}
+        return result;
+      };
+    }
+    window.__gpClientPaymentPatched=true;return true;
+  }
+  const style=document.createElement('style'); style.textContent='.gp-v3-box{width:min(760px,100%)}.gp-v3-box .kv{min-height:58px}.gp-v3-box .foot{flex-wrap:wrap}.gp-v3-actions{display:flex;gap:5px;flex-wrap:wrap}.gp-v3-actions .btn{padding:6px 8px;font-size:12px}.gp-payment-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0;padding:14px;background:#f8f7fb;border:1px solid #e7e3ef;border-radius:12px}.gp-payment-fields .full{grid-column:1/-1}.gp-payment-fields input[type=url]{width:100%}.gp-payment-fields small{font-size:11px}@media(max-width:700px){.gp-payment-fields{grid-template-columns:1fr}.gp-payment-fields .full{grid-column:auto}}'; document.head.appendChild(style);
+  const boot=()=>{patchClientModal();let n=0,t=setInterval(()=>{if(patchClientModal()||++n>80)clearInterval(t)},250)};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
