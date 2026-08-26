@@ -2,10 +2,17 @@
 (function(){
  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
  const db=()=>window.D||window.db||window.state||window.data||{};
- const list=()=>db().clients||db().clientes||window.clients||[];
- function days(c){const raw=c.due||c.vencimento||c.expiration||c.expiresAt;if(!raw)return null;const t=new Date(raw+'T23:59:59');return Math.ceil((t-Date.now())/86400000)}
+ function list(){
+   const d=db();
+   const clients=d.clients||d.clientes||window.clients;
+   if(Array.isArray(clients)) return clients;
+   try{const raw=localStorage.getItem('resolve_palmeira_v6');const x=raw?JSON.parse(raw):null;if(Array.isArray(x?.clients))return x.clients}catch(e){}
+   return [];
+ }
+ function days(c){const raw=c.due||c.vencimento||c.expiration||c.expiresAt;if(!raw)return null;const t=new Date(String(raw).includes('T')?raw:String(raw)+'T23:59:59');return Math.ceil((t-Date.now())/86400000)}
  function group(c){const d=days(c);if(d===null)return 'sem-data';if(d<0)return 'vencido';if(d===0)return 'hoje';if(d<=3)return '3dias';if(d<=7)return '7dias';return 'futuro'}
- function paymentLink(c){const enabled=c?.include_payment_link_in_messages===true||String(c?.include_payment_link_in_messages??'').trim().toLowerCase()==='true'||String(c?.include_payment_link_in_messages??'').trim()==='1';const link=String(c?.payment_link??'').trim();return enabled&&link?link:''}
+ function enabled(v){return v===true||v===1||String(v??'').trim().toLowerCase()==='true'||String(v??'').trim()==='1'}
+ function paymentLink(c){const link=String(c?.payment_link??c?.paymentLink??'').trim();return enabled(c?.include_payment_link_in_messages??c?.includePaymentLinkInMessages)&&link?link:''}
  function message(c){const name=c.name||c.nome||'Cliente';const due=c.due||c.vencimento||'-';let text='Olá '+name+', tudo bem? Passando para avisar sobre o vencimento da sua assinatura ('+due+').';const link=paymentLink(c);if(link){text+='\n\nPara renovar seu plano, clique no link abaixo:\n'+link+'\n\nPor favor, nos envie o comprovante de pagamento assim que possível.'}return text}
  window.gpBilling=function(filter='hoje'){
   let m=document.getElementById('gpBillingV6');if(!m){m=document.createElement('div');m.id='gpBillingV6';m.className='modal';document.body.appendChild(m)}
