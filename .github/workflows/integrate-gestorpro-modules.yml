@@ -12,6 +12,7 @@ on:
       - 'backup-v8-enhancement.js'
       - 'settings-v9-enhancement.js'
       - 'gestorpro-integration-v10.js'
+      - 'gestorpro-persistence-v14.js'
       - '.github/workflows/integrate-gestorpro-modules.yml'
 
 permissions:
@@ -33,6 +34,7 @@ jobs:
           p = Path('index.html')
           text = p.read_text(encoding='utf-8')
           files = [
+              'gestorpro-persistence-v14.js',
               'client-v3-enhancement.js',
               'servers-v4-enhancement.js',
               'finance-v5-enhancement.js',
@@ -53,8 +55,6 @@ jobs:
                   text += '\n' + block
           else:
               start = text.index(marker)
-              end = text.find('</script>', start)
-              # Rebuild the marked section safely, regardless of prior contents.
               next_body = text.find('</body>', start)
               if next_body == -1:
                   next_body = text.find('</html>', start)
@@ -70,6 +70,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'Nenhuma alteração necessária.'
           else
-            git commit -m 'feat: integrar módulos do GestorPro ao painel principal'
+            git commit -m 'feat: integrar persistência Supabase ao painel principal'
             git push
           fi
