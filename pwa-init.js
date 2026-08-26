@@ -1,15 +1,9 @@
 (() => {
   const BASE = '/Resolve-palmeira/';
 
-  // O index.html já possui a navegação principal do GestorPro.
-  // Versões antigas da integração criavam uma segunda barra (#gpV10Nav).
-  const removeLegacyNav = () => {
-    const legacy = document.getElementById('gpV10Nav');
-    if (legacy) legacy.remove();
-  };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', removeLegacyNav, { once: true });
-  else removeLegacyNav();
-  new MutationObserver(removeLegacyNav).observe(document.documentElement, { childList: true, subtree: true });
+  // O GestorPro possui uma navegação principal no index.html e a integração
+  // de autenticação cria a barra superior #gpV10Nav, que contém também Sair.
+  // Não remova essa barra: ela é parte funcional do painel, não apenas visual.
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
