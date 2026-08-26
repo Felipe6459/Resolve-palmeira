@@ -17,7 +17,7 @@
     const profit=value-cost;
     modal.innerHTML='<div class="box gp-v3-box"><div class="modalhead"><h2>'+esc(c.name||c.nome||'Cliente')+'</h2><button class="btn" onclick="this.closest(\'.modal\').classList.remove(\'open\')">✕</button></div>'+
       '<div class="profile"><div class="kv"><small>WhatsApp</small><b>'+esc(c.whatsapp||c.phone||'-')+'</b></div><div class="kv"><small>Status</small><b>'+esc(c.status||'-')+'</b></div><div class="kv"><small>Plano</small><b>'+esc(c.plan||c.plano||'-')+'</b></div><div class="kv"><small>Valor</small><b>'+money(value)+'</b></div><div class="kv"><small>Servidor</small><b>'+esc(c.serverName||c.servidor||'-')+'</b></div><div class="kv"><small>Custo do crédito</small><b>'+money(cost)+'</b></div><div class="kv"><small>Lucro estimado</small><b class="green">'+money(profit)+'</b></div><div class="kv"><small>Vencimento</small><b>'+esc(c.due||c.vencimento||'-')+'</b></div></div>'+
-      '<div class="foot"><button class="btn" onclick="document.getElementById(\'gpClientV3\').classList.remove(\'open\');clientModal&&clientModal('+JSON.stringify(c.id)+')">✏️ Editar</button><button class="btn primary" onclick="document.getElementById(\'gpClientV3\').classList.remove(\'open\');renewClient&&renewClient('+JSON.stringify(c.id)+')">🔄 Renovar</button><button class="btn soft" onclick="document.getElementById(\'gpClientV3\').classList.remove(\'open\');migrateClient&&migrateClient('+JSON.stringify(c.id)+')">🖥️ Migrar</button></div></div>';
+      '<div class="foot"><button class="btn" onclick="document.getElementById(\'gpClientV3\').classList.remove(\'open\');window.gpOpenClientEdit&&gpOpenClientEdit('+JSON.stringify(c.id)+')">✏️ Editar</button><button class="btn primary" onclick="document.getElementById(\'gpClientV3\').classList.remove(\'open\');renewClient&&renewClient('+JSON.stringify(c.id)+')">🔄 Renovar</button><button class="btn soft" onclick="document.getElementById(\'gpClientV3\').classList.remove(\'open\');migrateClient&&migrateClient('+JSON.stringify(c.id)+')">🖥️ Migrar</button></div></div>';
     modal.classList.add('open');
   };
 
@@ -40,6 +40,8 @@
     if(typeof window.clientModal!=='function'||window.__gpClientPaymentPatched)return false;
     const originalModal=window.clientModal;
     window.clientModal=function(id){window.__gpEditingClient=id?findClient(id):null;const r=originalModal.apply(this,arguments);setTimeout(injectPaymentFields,0);setTimeout(injectPaymentFields,120);return r};
+    window.gpOpenClientEdit=function(id){window.__gpEditingClient=findClient(id)||null; if(typeof window.clientModal==='function') return window.clientModal(id); window.toast?.('Não foi possível abrir a edição do cliente');};
+    window.editClient=window.gpOpenClientEdit;
     if(typeof window.saveClient==='function'){
       const originalSave=window.saveClient;
       window.saveClient=async function(e){
