@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gestorpro-v3';
+const CACHE_NAME = 'gestorpro-v4';
 const BASE = '/Resolve-palmeira/';
 const APP_SHELL = [
   `${BASE}`,
@@ -29,33 +29,20 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
-
   const url = new URL(request.url);
-
-  // Nunca coloque Supabase, APIs ou outros hosts externos no cache do PWA.
   if (url.origin !== self.location.origin) return;
-
-  // O Service Worker só controla o aplicativo dentro do próprio diretório.
   if (!url.pathname.startsWith(BASE)) return;
-
-  // Para navegação, tenta a rede primeiro e usa o shell somente se estiver offline.
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).catch(() => caches.match(`${BASE}index.html`))
-    );
+    event.respondWith(fetch(request).catch(() => caches.match(`${BASE}index.html`)));
     return;
   }
-
-  // Recursos estáticos: rede primeiro; cache como fallback offline.
   event.respondWith(
-    fetch(request)
-      .then(response => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-        }
-        return response;
-      })
-      .catch(() => caches.match(request))
+    fetch(request).then(response => {
+      if (response.ok) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+      }
+      return response;
+    }).catch(() => caches.match(request))
   );
 });
