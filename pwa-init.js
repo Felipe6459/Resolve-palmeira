@@ -59,7 +59,13 @@
     catch (e) { console.error('GestorPro Plan Manager:', e); }
   }
 
+  async function initNavigationStability() {
+    try { await loadScript(`${BASE}navigation-stability-v1.js?v=20260826-v3`, 'gestorpro-navigation-stability'); }
+    catch (e) { console.error('GestorPro Navigation:', e); }
+  }
+
   function boot() {
+    initNavigationStability();
     initAsaasUI();
     initPlanManager();
   }
